@@ -1,1 +1,0 @@
-# criptenor_app
