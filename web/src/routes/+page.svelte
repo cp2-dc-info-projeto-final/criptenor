@@ -3,6 +3,7 @@
     import PorHoraDoDia from "./componentes/graficos/PorHoraDoDia.svelte";
     import Engajamento from "./componentes/graficos/Engajamento.svelte";
     import SeguidoresENaoSeguidores from "./componentes/graficos/SeguidoresENaoSeguidores.svelte";
+    import TodosUsuarios from "./componentes/listas/TodosUsuarios.svelte";
 </script>
 <Nav/>
 <style>
@@ -119,7 +120,6 @@
     .comentarios_repetidos .comentarios div, .comentarios_repetidos .titulo div{
         width: 33.33%;
         text-align: center;
-        align-content: space-evenly
     }
 </style>
 
@@ -150,43 +150,8 @@
     
         </div>
     </div>
-    <div class="hierarquia_de_engajamento">
-        <div class="hierarquia_engajamento_list">
-            <div class="titulo">
-                <div class="posicao">
-                    Posição
-                </div>
-                <div class="usuario">
-                    Usuário
-                </div>
-            </div>
-            <div class="resultado">
-                <div class="posicao">
-                    1
-                </div>
-                <div class="usuario">
-                    adeiltonfilho80
-                </div>
-            </div>
-            <div class="resultado">
-                <div class="posicao">
-                    2
-                </div>
-                <div class="usuario">
-                    cp2caxias
-                </div>
-            </div>
-            <div class="resultado">
-                <div class="posicao">
-                    3
-                </div>
-                <div class="usuario">
-                    casafluminense
-                </div>
-            </div>
-
-        </div>
-
+    <div class="usuarios">
+        <TodosUsuarios/>
     </div>
     <div class="informacoes_intervalo">
         <div class="grafico enagajamento_por_hora_do_dia">
