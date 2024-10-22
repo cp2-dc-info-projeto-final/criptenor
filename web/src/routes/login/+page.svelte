@@ -1,0 +1,202 @@
+<script>
+  import Nav from "../componentes/Nav.svelte";
+
+  async function handleSubmit(event) {
+    event.preventDefault(); // Impede o envio tradicional do formulário
+
+    const email = document.getElementById('email').value;
+    const senha = document.getElementById('senha').value;
+
+    // Fazer a requisição usando fetch
+    try {
+      const response = await fetch('http://localhost:3000/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email,
+          senha: senha,
+        }),
+      });
+
+      const data = await response.json();
+
+      // Verifica se o login foi bem-sucedido
+      if (response.ok) {
+        // Armazenar a sessão ou dados do usuário
+        sessionStorage.setItem('user', JSON.stringify(data));
+
+        // Redirecionar para a página inicial
+        window.location.href = '/';
+      } else {
+        // Exibe o erro recebido
+        alert(data.error || 'Erro ao fazer login');
+      }
+    } catch (error) {
+      console.error('Erro ao fazer login:', error);
+      alert('Erro ao fazer login, tente novamente mais tarde.');
+    }
+  }
+</script>
+
+<style>
+  /* From Uiverse.io by Yaya12085 */ 
+  .body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .form-container {
+    width: 320px;
+    border-radius: 0.75rem;
+    background-color: rgba(17, 24, 39, 1);
+    padding: 2rem;
+    color: rgba(243, 244, 246, 1);
+    margin-top: 10%;
+  }
+
+  .title {
+    text-align: center;
+    font-size: 1.5rem;
+    line-height: 2rem;
+    font-weight: 700;
+  }
+
+  .form {
+    margin-top: 1.5rem;
+  }
+
+  .input-group {
+    margin-top: 0.25rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+
+  .input-group label {
+    display: block;
+    color: rgba(156, 163, 175, 1);
+    margin-bottom: 4px;
+  }
+
+  .input-group input {
+    width: 90%;
+    border-radius: 0.375rem;
+    border: 1px solid rgba(55, 65, 81, 1);
+    outline: 0;
+    background-color: rgba(17, 24, 39, 1);
+    padding: 0.75rem 1rem;
+    color: rgba(243, 244, 246, 1);
+  }
+
+  .input-group input:focus {
+    border-color: rgba(167, 139, 250);
+  }
+
+  .forgot {
+    display: flex;
+    justify-content: flex-end;
+    font-size: 0.75rem;
+    line-height: 1rem;
+    color: rgba(156, 163, 175, 1);
+    margin: 8px 0 14px 0;
+  }
+
+  .forgot a,
+  .signup a {
+    color: rgba(243, 244, 246, 1);
+    text-decoration: none;
+    font-size: 14px;
+  }
+
+  .forgot a:hover,
+  .signup a:hover {
+    text-decoration: underline rgba(167, 139, 250, 1);
+  }
+
+  .sign {
+    display: block;
+    width: 100%;
+    background-color: rgba(167, 139, 250, 1);
+    padding: 0.75rem;
+    text-align: center;
+    color: rgba(17, 24, 39, 1);
+    border: none;
+    border-radius: 0.375rem;
+    font-weight: 600;
+  }
+
+  .social-message {
+    display: flex;
+    align-items: center;
+    padding-top: 1rem;
+  }
+
+  .line {
+    height: 1px;
+    flex: 1 1 0%;
+    background-color: rgba(55, 65, 81, 1);
+  }
+
+  .social-message .message {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    color: rgba(156, 163, 175, 1);
+  }
+
+  .social-icons {
+    display: flex;
+    justify-content: center;
+  }
+
+  .social-icons .icon {
+    border-radius: 0.125rem;
+    padding: 0.75rem;
+    border: none;
+    background-color: transparent;
+    margin-left: 8px;
+  }
+
+  .social-icons .icon svg {
+    height: 1.25rem;
+    width: 1.25rem;
+    fill: #fff;
+  }
+
+  .signup {
+    text-align: center;
+    font-size: 0.75rem;
+    line-height: 1rem;
+    color: rgba(156, 163, 175, 1);
+  }
+</style>
+
+<Nav />
+<div class="body">
+  <div class="form-container">
+    <p class="title">Entrar</p>
+    <form class="form" on:submit={handleSubmit}>
+      <div class="input-group">
+        <label for="username">Usuário</label>
+        <input type="text" name="email" id="email" placeholder="">
+      </div>
+      <div class="input-group">
+        <label for="password">Senha </label>
+        <input type="password" name="senha" id="senha" placeholder="">
+        <div class="forgot">
+          <a rel="noopener noreferrer" href="#">Esqueceu a senha?</a>
+        </div>
+      </div>
+      <button class="sign" type="submit">Entrar</button>
+    </form>
+    <div class="social-message">
+      <div class="line"></div>
+      <p class="message">Ainda não tenho conta!</p>
+      <div class="line"></div>
+    </div>
+    <button class="sign">Cadastre-se</button>
+  </div>
+</div>
