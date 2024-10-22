@@ -40,7 +40,10 @@
     <img src="criptenor.png" width="30" height="30" class="d-inline-block align-top" alt="">
     Criptenor
   </a>
-  <a class="nav_item" href="/adm">Administração</a>
+
+  {#if userId === 1}
+    <a class="nav_item" href="/adm">Administração</a>
+  {/if}
 
   {#if userId}
     <button class="btn btn-link nav_item" on:click={logout}>Sair</button>

@@ -183,10 +183,41 @@ app.get('/usuario/:arroba', async (req, res) => {
   }
 });
 
-// Rota para analisar um perfil por arroba
-// Rota para analisar um perfil por arroba
+// Rota para buscar um usuário específico por ID
+// Rota para buscar o usuário interno pela sessão
+app.get('/usuario_interno', async (req, res) => {
+  // Verifica se o usuário está logado
+  if (!req.session.userId) {
+    return res.status(401).json({ error: 'Usuário não autenticado' });
+  }
+
+  const userId = req.session.userId; // Obtém o ID do usuário da sessão
+  
+  try {
+    const { data, error } = await supabase
+      .from('usuario_apk') // Altere para o nome correto da sua tabela se necessário
+      .select('*')
+      .eq('id', userId) // Usando o ID da sessão
+      .single(); // Usamos single() porque esperamos apenas um usuário
+
+    if (error) {
+      return res.status(500).json({ error: 'Erro ao buscar o usuário' });
+    }
+
+    if (!data) {
+      return res.status(404).json({ error: 'Usuário não encontrado' });
+    }
+
+    res.status(200).json(data); // Retornar os dados do usuário
+  } catch (err) {
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+
 // Rota para analisar um perfil por arroba
 app.get('/analise-perfil/:param_arroba', async (req, res) => {
+
   const { param_arroba } = req.params;
 
   if (!param_arroba) {
@@ -206,6 +237,76 @@ app.get('/analise-perfil/:param_arroba', async (req, res) => {
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
+
+// Endpoint para buscar arroba pelo ID
+app.get('/usuario-apk/:id', async (req, res) => {
+  const { id } = req.params;
+
+  if (!id) {
+      return res.status(400).json({ error: 'Parâmetro ID é obrigatório' });
+  }
+
+  try {
+      // Consulta na tabela usuario_apk para obter o arroba pelo ID
+      const { data, error } = await supabase
+          .from('usuario_apk')
+          .select('arroba')
+          .eq('id', id)
+          .single(); // Usando .single() para obter um único registro
+
+      if (error || !data) {
+          return res.status(404).json({ error: 'Usuário não encontrado' });
+      }
+
+      // Retornar o arroba como JSON
+      res.status(200).json(data);
+  } catch (err) {
+      console.error('Erro interno do servidor:', err);
+      res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Rota para analisar perfil por ID do usuário
+app.get('/analise-perfil-por-id/:id', async (req, res) => {
+  const { id } = req.params;
+
+  if (!id) {
+    return res.status(400).json({ error: 'Parâmetro ID é obrigatório' });
+  }
+
+  try {
+    // Consulta na tabela usuario_apk para obter o arroba pelo ID
+    const { data: user, error: userError } = await supabase
+      .from('usuario_apk')
+      .select('arroba')
+      .eq('id', id)
+      .single(); // Usando .single() para obter um único registro
+
+    if (userError || !user) {
+      return res.status(404).json({ error: 'Usuário não encontrado' });
+    }
+
+    const arroba = user.arroba;
+
+    // Chamar a função RPC 'analise_de_um_perfil' no Supabase
+    const { data: analiseData, error: analiseError } = await supabase.rpc('analise_de_um_perfil', {
+      param_arroba: arroba // Passando o parâmetro para a função RPC
+    });
+
+    if (analiseError) {
+      console.error('Erro ao chamar a função de análise:', analiseError);
+      return res.status(500).json({ error: 'Erro ao realizar análise de perfil' });
+    }
+
+    // Retornar os dados da análise do perfil como jsonb
+    res.status(200).json(analiseData); // Aqui o analiseData será um objeto jsonb
+  } catch (err) {
+    console.error('Erro interno do servidor:', err);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+
 
 
 // Iniciar o servidor

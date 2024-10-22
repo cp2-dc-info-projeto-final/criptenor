@@ -5,22 +5,22 @@
     import SeguidoresENaoSeguidores from "./componentes/graficos/SeguidoresENaoSeguidores.svelte";
     import UserAudit from "./componentes/user_audit/UserAudit.svelte";
     
-    
     import { onMount } from 'svelte';
+    import { goto } from '$app/navigation'; // Importa o goto para redirecionamento
 
     interface Perfil {
-    id: number;
-    nome: string;
-    arroba: string;
-    num_curtidas: number;
-    num_seguidores: number;
-    num_comentarios: number;
-    relacionamento: Array<{ arroba: string; pontuacao: number }>;
+        id: number;
+        nome: string;
+        arroba: string;
+        num_curtidas: number;
+        num_seguidores: number;
+        num_comentarios: number;
+        relacionamento: Array<{ arroba: string; pontuacao: number }>;
     }
 
     let perfil: Perfil | null = null;
     let erro: string | null = null;
-    const arroba = 'adeiltonfilho80';
+    let userId: number | null = null; // Inicializa userId como null
 
     // Variáveis de controle de página
     let currentPage = 0;
@@ -28,37 +28,65 @@
 
     // Função para buscar a análise do perfil
     const fetchAnalisePerfil = async () => {
-    try {
-        const response = await fetch(`http://localhost:3000/analise-perfil/${arroba}`);
-        if (!response.ok) {
-        throw new Error('Erro ao buscar análise do perfil');
+        if (!userId) {
+            erro = 'ID do usuário não encontrado';
+            goto('/login'); // Redireciona para a página de login
+            return;
         }
-        perfil = await response.json(); // Assume que a resposta está no formato de Perfil
-    } catch (error) {
-        erro = error instanceof Error ? error.message : 'Erro desconhecido';
-        console.error('Erro:', erro);
-    }
+
+        try {
+            const response = await fetch(`http://localhost:3000/analise-perfil-por-id/${userId}`);
+            if (!response.ok) {
+                throw new Error('Erro ao buscar análise do perfil');
+            }
+            perfil = await response.json(); // Assume que a resposta está no formato de Perfil
+        } catch (error) {
+            erro = error instanceof Error ? error.message : 'Erro desconhecido';
+            console.error('Erro:', erro);
+        }
     };
 
     // Função para mudar a página
     const nextPage = () => {
-    if (perfil && (currentPage + 1) * itemsPerPage < perfil.relacionamento.length) {
-        currentPage += 1;
-    }
+        if (perfil && (currentPage + 1) * itemsPerPage < perfil.relacionamento.length) {
+            currentPage += 1;
+        }
     };
 
     const prevPage = () => {
-    if (currentPage > 0) {
-        currentPage -= 1;
-    }
+        if (currentPage > 0) {
+            currentPage -= 1;
+        }
     };
 
     // Chamar a função na montagem do componente
-    onMount(async () => {
-    await fetchAnalisePerfil();
+    onMount(() => {
+        const userData = sessionStorage.getItem('user');
+
+        if (userData) {
+            try {
+                const parsedUser = JSON.parse(userData);
+                if (parsedUser?.user?.id) {
+                    userId = parsedUser.user.id;
+                    console.log('Usuário autenticado com ID:', userId);
+                    fetchAnalisePerfil(); // Chama a função para buscar análise do perfil
+                } else {
+                    console.log('ID do usuário não encontrado');
+                    goto('/login'); // Redireciona para /login se o ID não for encontrado
+                }
+            } catch (error) {
+                console.error('Erro ao fazer parsing dos dados do usuário', error);
+                goto('/login'); // Redireciona para /login em caso de erro
+            }
+        } else {
+            console.log('Nenhum dado de usuário encontrado no sessionStorage');
+            goto('/login'); // Redireciona para /login se não houver dados
+        }
     });
 
 </script>
+
+
 <UserAudit/>
 <Nav/>
 <style>
