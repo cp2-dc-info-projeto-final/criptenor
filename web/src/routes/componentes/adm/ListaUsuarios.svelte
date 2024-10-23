@@ -87,12 +87,14 @@
     .icons button {
         border: 0;
         background-color: transparent;
+
     }
     .icons img {
         width: 25px;
         background-color: aquamarine;
         border-radius: 5px;
         padding: 3px;
+        margin-left: 5px;
     }
     /* Estilos do popup */
     .popup {

@@ -1,3 +1,4 @@
+
 <script>
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
@@ -23,6 +24,7 @@
   // Função para fazer logout
   function logout() {
     sessionStorage.removeItem('user'); // Limpa a sessão
+    userId = null; // Atualiza o estado local para refletir o logout
     goto('/login'); // Redireciona para a página de login
   }
 </script>
@@ -115,6 +117,13 @@
   }
   .logo{
     display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    
+  }
+  a{
+    text-decoration: none;
   }
   .button_analise{
     text-decoration: none;
@@ -123,10 +132,12 @@
 
 <header>
   <nav id="navbar">
-    <div class="logo">
-      <img src="criptenor.png" width="30" height="30" alt="Logo Criptenor">
-      <span id="nav_logo">CRIPTENOR</span>
-    </div>
+    <a href="/">
+      <div class="logo">
+        <img src="criptenor.png" width="30" height="30" alt="Logo Criptenor">
+        <span id="nav_logo">CRIPTENOR</span>
+      </div>
+    </a>
 
     <ul id="nav_list">
       <li class="nav-item active">
@@ -144,23 +155,20 @@
           <a href="/adm">Administração</a>
         </li>
       {/if}
-
-      {#if userId}
-        <li class="nav-item">
-          <button class="btn btn-link" on:click={logout}>Sair</button>
-        </li>
-      {:else}
-        <li class="nav-item">
-          <a href="/login">Entrar</a>
-        </li>
-      {/if}
     </ul>
-    <a class="button_analise" href="/dashboard">
-      <button class="btn-default">
-        Começar Análise
+
+    <!-- Botão Entrar/Sair -->
+    {#if userId}
+      <button class="btn-default" on:click={logout}>
+        Sair
       </button>
-    </a>
-    
+    {:else}
+      <a class="button_analise" href="/login">
+        <button class="btn-default">
+          Entrar
+        </button>
+      </a>
+    {/if}
 
     <button id="mobile_btn">
       <i class="fa-solid fa-bars"></i>

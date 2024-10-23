@@ -144,6 +144,10 @@
         <input type="email" name="email" id="email" placeholder="Digite seu email">
       </div>
       <div class="input-group">
+        <label for="nome">Nome</label>
+        <input type="text" name="nome" id="nome" placeholder="Adeilton ...">
+      </div>
+      <div class="input-group">
         <label for="arroba">Arroba Instagram</label>
         <input type="text" name="arroba" id="arroba" placeholder="@usuario">
       </div>

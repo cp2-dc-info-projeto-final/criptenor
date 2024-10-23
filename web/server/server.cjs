@@ -42,12 +42,29 @@ app.get('/session', (req, res) => {
     return res.status(200).json({ loggedIn: false });
   }
 });
+// Rota para logout
+app.post('/logout', (req, res) => {
+  // Verifica se o usuário está logado
+  if (req.session.userId) {
+    // Destrói a sessão do usuário
+    req.session.destroy(err => {
+      if (err) {
+        return res.status(500).json({ error: 'Erro ao realizar logout' });
+      }
+
+      // Redireciona ou envia resposta de sucesso
+      return res.status(200).json({ message: 'Logout realizado com sucesso' });
+    });
+  } else {
+    return res.status(400).json({ error: 'Usuário não está logado' });
+  }
+});
 
 // Rota POST para cadastrar um novo usuário
 app.post('/cadastro_usuario', async (req, res) => {
-  const { email, arroba, senha } = req.body;
+  const { email, nome, arroba, senha } = req.body;
 
-  if (!email || !arroba || !senha) {
+  if (!email || !arroba || !senha || !nome) {
     return res.status(400).json({ error: 'Email, arroba e senha são obrigatórios' });
   }
 
@@ -56,7 +73,7 @@ app.post('/cadastro_usuario', async (req, res) => {
     const { data: existingUser, error: checkError } = await supabase
       .from('usuario_apk')
       .select('*')
-      .or(`usuario.eq.${email},arroba.eq.${arroba}`);
+      .or(`usuario.eq.${email}`);
 
     if (checkError) {
       return res.status(500).json({ error: 'Erro ao verificar usuário existente' });
@@ -73,6 +90,7 @@ app.post('/cadastro_usuario', async (req, res) => {
     const { data, error } = await supabase
       .from('usuario_apk')
       .insert([{ 
+        nome: nome,
         usuario: email, 
         arroba: arroba, 
         senha: hashedPassword // Armazenando a senha criptografada
@@ -394,18 +412,12 @@ app.post('/usuario-apk/apagar', async (req, res) => {
       .delete()
       .eq('id', id); // Deletar onde o ID corresponde ao parâmetro passado
 
-    if (error) {
-      return res.status(500).json({ error: 'Erro ao apagar o usuário' });
-    }
-
-    if (!data.length) {
-      return res.status(404).json({ error: 'Usuário não encontrado' });
-    }
+    
 
     res.status(200).json({ message: 'Usuário apagado com sucesso' });
   } catch (err) {
     console.error('Erro interno do servidor:', err);
-    res.status(500).json({ error: 'Erro interno do servidor' });
+    
   }
 });
 
