@@ -28,26 +28,165 @@
 </script>
 
 <style>
-  .nav_item {
-    margin: 10px;
+  header {
+    width: 100%;
+    padding: 28px 8%;
+    position: sticky;
+    top: 0;
+    background-color: var(--color-primary-1);
+    z-index: 3;
+  }
+
+  #navbar {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  #nav_logo {
+    font-size: 24px;
+    color: var(--color-primary-6);
+  }
+
+  #nav_list {
+    display: flex;
+    list-style: none;
+    gap: 48px;
+  }
+
+  .nav-item a {
+    text-decoration: none;
+    color: #1d1d1dad;
+    font-weight: 600;
+  }
+
+  .nav-item.active a {
+    color: var(--color-neutral-1);
+    border-bottom: 3px solid var(--color-primary-4);
+  }
+
+  .btn-default {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+  }
+
+  #mobile_btn {
+    display: none;
+  }
+
+  #mobile_menu {
+    display: none;
+  }
+
+  @media screen and (max-width: 1170px) {
+    #nav_list,
+    #navbar .btn-default {
+      display: none;
+    }
+
+    #mobile_btn {
+      display: block;
+      border: none;
+      background-color: transparent;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    #mobile_menu.active {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    #mobile_nav_list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin: 12px 0px;
+    }
+
+    #mobile_nav_list .nav-item {
+      list-style: none;
+      text-align: center;
+    } 
+  }
+  .logo{
+    display: flex;
   }
 </style>
 
-<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+<header>
+  <nav id="navbar">
+    <div class="logo">
+      <img src="criptenor.png" width="30" height="30" alt="Logo Criptenor">
+      <span id="nav_logo">Criptenor</span>
+    </div>
 
-<nav class="navbar navbar-light bg-light">
-  <a class="navbar-brand" href="/">
-    <img src="criptenor.png" width="30" height="30" class="d-inline-block align-top" alt="">
-    Criptenor
-  </a>
+    <ul id="nav_list">
+      <li class="nav-item active">
+        <a href="#home">Início</a>
+      </li>
+      <li class="nav-item">
+        <a href="#menu">Serviços</a>
+      </li>
+      <li class="nav-item">
+        <a href="#testimonials">Avaliações</a>
+      </li>
 
-  {#if userId === 1}
-    <a class="nav_item" href="/adm">Administração</a>
-  {/if}
+      {#if userId === 1}
+        <li class="nav-item">
+          <a href="/adm">Administração</a>
+        </li>
+      {/if}
 
-  {#if userId}
-    <button class="btn btn-link nav_item" on:click={logout}>Sair</button>
-  {:else}
-    <a class="nav_item" href="/login">Entrar</a>
-  {/if}
-</nav>
+      {#if userId}
+        <li class="nav-item">
+          <button class="btn btn-link" on:click={logout}>Sair</button>
+        </li>
+      {:else}
+        <li class="nav-item">
+          <a href="/login">Entrar</a>
+        </li>
+      {/if}
+    </ul>
+
+    <button class="btn-default">
+      Peça aqui
+    </button>
+
+    <button id="mobile_btn">
+      <i class="fa-solid fa-bars"></i>
+    </button>
+  </nav>
+
+  <div id="mobile_menu">
+    <ul id="mobile_nav_list">
+      <li class="nav-item">
+        <a href="#home">Início</a>
+      </li>
+      <li class="nav-item">
+        <a href="#menu">Cardápio</a>
+      </li>
+      <li class="nav-item">
+        <a href="#testimonials">Avaliações</a>
+      </li>
+
+      {#if userId}
+        <li class="nav-item">
+          <button class="btn btn-link" on:click={logout}>Sair</button>
+        </li>
+      {:else}
+        <li class="nav-item">
+          <a href="/login">Entrar</a>
+        </li>
+      {/if}
+    </ul>
+
+    <button class="btn-default">
+      Peça aqui
+    </button>
+  </div>
+</header>
