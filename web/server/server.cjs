@@ -306,6 +306,56 @@ app.get('/analise-perfil-por-id/:id', async (req, res) => {
   }
 });
 
+// Rota POST para cadastrar um novo serviço
+app.post('/cadastro_servico', async (req, res) => {
+  const { nome, descricao, avaliacao, valor } = req.body;
+
+  // Verificar se os campos obrigatórios estão presentes
+  if (!nome || !descricao || !avaliacao || !valor) {
+    return res.status(400).json({ error: 'Nome, descrição, avaliação e valor são obrigatórios' });
+  }
+
+  try {
+    // Inserir o novo serviço na tabela 'servico'
+    const { data, error } = await supabase
+      .from('servicos')
+      .insert([{ 
+        nome: nome,
+        descricao: descricao,
+        avaliacao: avaliacao,
+        valor: valor
+      }]);
+
+    if (error) {
+      return res.status(500).json({ error: 'Erro ao cadastrar o serviço' });
+    }
+
+    
+  } catch (err) {
+    console.error('Erro interno do servidor:', err);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Rota para buscar todos os serviços prestados
+app.get('/servicos', async (req, res) => {
+  try {
+    // Consulta todos os serviços na tabela 'servicos'
+    const { data, error } = await supabase
+      .from('servicos') // Certifique-se de que o nome da tabela está correto
+      .select('*');
+
+    if (error) {
+      return res.status(500).json({ error: 'Erro ao buscar serviços' });
+    }
+
+    // Retorna todos os serviços como JSON
+    res.status(200).json(data);
+  } catch (err) {
+    console.error('Erro interno do servidor:', err);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
 
 
 

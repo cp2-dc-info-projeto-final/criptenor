@@ -1,467 +1,224 @@
-<script lang="ts">
+<script>
     import Nav from "./componentes/Nav.svelte";
-    import PorHoraDoDia from "./componentes/graficos/PorHoraDoDia.svelte";
-    import Engajamento from "./componentes/graficos/Engajamento.svelte";
-    import SeguidoresENaoSeguidores from "./componentes/graficos/SeguidoresENaoSeguidores.svelte";
-    import UserAudit from "./componentes/user_audit/UserAudit.svelte";
-    
-    import { onMount } from 'svelte';
-    import { goto } from '$app/navigation'; // Importa o goto para redirecionamento
 
-    interface Perfil {
-        id: number;
-        nome: string;
-        arroba: string;
-        num_curtidas: number;
-        num_seguidores: number;
-        num_comentarios: number;
-        relacionamento: Array<{ arroba: string; pontuacao: number }>;
+    import { onMount } from "svelte";
+
+    // Variável reativa que armazenará os dados dos serviços
+    let services = [];
+
+    // Função para buscar os serviços do banco de dados via API
+    async function fetchServices() {
+        try {
+            const response = await fetch('http://localhost:3000/servicos');  // Substitua pelo seu endpoint real
+            if (!response.ok) {
+                throw new Error('Erro ao buscar serviços');
+            }
+            services = await response.json();  // Recebe a lista de serviços do banco
+        } catch (error) {
+            console.error(error);
+        }
     }
 
-    let perfil: Perfil | null = null;
-    let erro: string | null = null;
-    let userId: number | null = null; // Inicializa userId como null
-
-    // Variáveis de controle de página
-    let currentPage = 0;
-    const itemsPerPage = 15;
-
-    // Função para buscar a análise do perfil
-    const fetchAnalisePerfil = async () => {
-        if (!userId) {
-            erro = 'ID do usuário não encontrado';
-            goto('/login'); // Redireciona para a página de login
-            return;
-        }
-
-        try {
-            const response = await fetch(`http://localhost:3000/analise-perfil-por-id/${userId}`);
-            if (!response.ok) {
-                throw new Error('Erro ao buscar análise do perfil');
-            }
-            perfil = await response.json(); // Assume que a resposta está no formato de Perfil
-        } catch (error) {
-            erro = error instanceof Error ? error.message : 'Erro desconhecido';
-            console.error('Erro:', erro);
-        }
-    };
-
-    // Função para mudar a página
-    const nextPage = () => {
-        if (perfil && (currentPage + 1) * itemsPerPage < perfil.relacionamento.length) {
-            currentPage += 1;
-        }
-    };
-
-    const prevPage = () => {
-        if (currentPage > 0) {
-            currentPage -= 1;
-        }
-    };
-
-    // Chamar a função na montagem do componente
+    // onMount: Executa a função quando o componente é montado
     onMount(() => {
-        const userData = sessionStorage.getItem('user');
-
-        if (userData) {
-            try {
-                const parsedUser = JSON.parse(userData);
-                if (parsedUser?.user?.id) {
-                    userId = parsedUser.user.id;
-                    console.log('Usuário autenticado com ID:', userId);
-                    fetchAnalisePerfil(); // Chama a função para buscar análise do perfil
-                } else {
-                    console.log('ID do usuário não encontrado');
-                    goto('/login'); // Redireciona para /login se o ID não for encontrado
-                }
-            } catch (error) {
-                console.error('Erro ao fazer parsing dos dados do usuário', error);
-                goto('/login'); // Redireciona para /login em caso de erro
-            }
-        } else {
-            console.log('Nenhum dado de usuário encontrado no sessionStorage');
-            goto('/login'); // Redireciona para /login se não houver dados
-        }
+        fetchServices();
     });
 
+    // Função auxiliar para renderizar estrelas
+    function renderStars(stars) {
+        return Array(stars).fill(0);
+    }
 </script>
 
 
-<UserAudit/>
-<Nav/>
-<style>
-  
-    .informacoes_inciais{
-    
-        justify-content: space-around;
-        
-    }
-    .informacoes_inciais div{
-        width: 150px;
-        height: 200px;
-        border-radius: 18px;
-        background-color: antiquewhite;           
-        justify-content: center;
-        align-items: center;
-        margin: 10px;
-        
-    }
-    .info_incial_img{
-        width: 65px;
-        height: 65px;
-    }
-    .info_item{
-        text-align: center;
-        padding: 10px;
-    }
-    .titulo3{
-        font-size: 35px;
-    }
-    .titulo2{
-        font-size: 22px;
-    }
-    .pagina{
-        
-        display: flex;
-        justify-content: space-around;
-    }
-    .informacoes_intervalo{
-        width: 65%;
-        background-color: antiquewhite;
-        border-radius: 18px;
-        
-        display: flex;
-        justify-content: space-around;
-        flex-wrap: wrap;
 
-    }
-    .grafico{
-        width: 400px;
-        height: 350px;
-        background-color: whitesmoke;
-        border-radius: 18px;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-        margin:5px;
-    }
-    .titulo_graficos{
-        font-size: 25px;
-    }
-    .engajamento_ao_longo_do_tempo{
-        width: 45%;
-    }
 
-    .comentarios_repetidos{
-        width: 45%;
-        background-color: aliceblue;
-        border-radius:18px ;
-        padding: 1%;
-              
 
-    }
-    .comentarios_repetidos p{
-        border: none;
-        margin: 0;
-    }
-    .comentarios_repetidos .titulo, .comentarios_repetidos .comentarios{
-        display: flex;
-        justify-content: space-around;
-        border: 1px solid;
-        border-radius: 18px;
-        padding: 1%;
-        margin-bottom: 10px;
-    }
-    .comentarios_repetidos .comentarios div, .comentarios_repetidos .titulo div{
-        width: 33.33%;
-        text-align: center;
-    }
 
-    .list_titulo, .list_resposta{
-        border-radius: 18px;
-        border: 1px solid black;
-        padding: 10px;
-        
-        justify-content: space-between;
-        align-items: center;
-        display: flex;
-        place-items: center; /* Centraliza horizontal e verticalmente */
-        flex-direction: row;
-        margin: 10px;
-    }
-    .list_titulo  p, .list_resposta p{
-        
-        margin: 0;
-    }
-    .hierarquia_de_relacionamento{
-        border-radius: 18px;
-        background-color: antiquewhite;
-        
-        margin:10px
-    }
-    .list_resposta{
-        background-color: aliceblue;
-        min-width: 375px;
-    }
-    .list_titulo{
-        background-color: beige;
-    }
-    .pagination {
-  display: flex;
-  justify-content: center;
-  margin: 10px 0;
-}
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="landding/styles/styles.css">
 
-.pagination button {
-  background-color: #f0f0f0;
-  border: none;
-  padding: 10px 20px;
-  margin: 0 5px;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.pagination button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-.time{
-    width: 100%;
-    height: 100px;
-    display: flex;
-    justify-content: center;
-
-}
-.time div{
-    
-    width: 130px;
-    height: 50px;
-    background-color: aliceblue;
-    border: 1px dotted black;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align: center  ;
-    border-radius: 8px;
-}
-.time_final{
-    margin-left:25px ;
-}
-.time img{
-    width: 40px;
-    height: 40px;
-}
- .time p{
-    margin: 0;
-    
- }
- .layout{
-    width: 100vw;
-    height: 100vh;
- }
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://unpkg.com/scrollreveal"></script>
+    <title>Criptenor</title>
+</head>
+<body>
+    <Nav/>
     
 
-</style>
+    <main id="content">
+        <section id="home">
+            <div class="shape"></div>
+            <div id="cta">
+                <h1 class="title">
+                    Análise de redes
+                    <span>você no controle.</span>
+                </h1>
 
-<div class="pagina">
-    <div class="informacoes_inciais">
-        <div class="seguidores info_item">
-                <img src="img/img_dash/profile.png" alt="" class="info_incial_img">
-                <p class="titulo2">Seguidores</p>
-                <p class="titulo3">
-                    {#if erro}
-                    <p>Erro: {erro}</p>
-                    {:else if perfil}
-                    <p>{perfil.num_seguidores}</p>
-                    {:else}
-                    <p>0</p>
-                    {/if}
+                <p class="description">
+                    Nós da criptenor, fazemos uma análise de dados profunda das suas redes sociais e entregamos para você.
                 </p>
+
+                <div id="cta_buttons">
+                    <a href="/#menu" class="btn-default">
+                        Ver Serviços
+                    </a>
+
+                    <a href="tel:+55555555555" id="phone_button">
+                        <button class="btn-default">
+                            <i class="fa-solid fa-phone"></i>
+                        </button>
+                        (21) 98085-6675
+                    </a>
+                </div>
+
+                <div class="social-media-buttons">
+                    <a target="_blank" href="https://wa.me/+5521980856675">
+                        <i class="fa-brands fa-whatsapp"></i>
+                    </a>
+    
+                    <a target="_blank" href="https://www.instagram.com/criptenor">
+                        <i class="fa-brands fa-instagram"></i>
+                    </a>
+    
+                    <a target="_blank" href="https://www.facebook.com/">
+                        <i class="fa-brands fa-facebook"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div id="banner">
+                <img src="banner.png" alt="">
+            </div>
+        </section>
+
+        <section id="menu">
+            <h2 class="section-title">Serviços</h2>
+            <h3 class="section-subtitle">Análise de Dados</h3>
+        
+            <div id="dishes">
+                {#if services.length === 0}
+                    <p>Carregando serviços...</p>
+                {/if}
                 
-        </div>
-        <div class="curtidas info_item">
-            <img src="img/img_dash/curtida.png" alt="" class="info_incial_img">
-                <p class="titulo2">Curtidas</p>
-                <p class="titulo3">
-                    {#if erro}
-                    <p>Erro: {erro}</p>
-                    {:else if perfil}
-                    <p>{perfil.num_curtidas}</p>
-                    {:else}
-                    <p>0</p>
-                    {/if}
-                </p>
-    
-        </div>
-        <div class="comentarios info_item">
-            <img src="img/img_dash/comentario.png" alt="" class="info_incial_img">
-                <p class="titulo2">Comentários</p>
-                <p class="titulo3">
-                    {#if erro}
-                    <p>Erro: {erro}</p>
-                    {:else if perfil}
-                    <p>{perfil.num_comentarios}</p>
-                    {:else}
-                    <p>0</p>
-                    {/if}
-                </p>
-    
-        </div>
-        <div class="oscilacao_crescimento info_item">
-            <img src="img/img_dash/crescimento.png" alt="" class="info_incial_img">
-                <p class="titulo2">Engajamento</p>
-                <p class="titulo3">665</p>
-    
-        </div>
-    </div>
-    <div class="hierarquia_de_relacionamento">
-        <div class="list_titulo">
-          <div class="titulo_posicao">
-            <p>Posição</p>
-          </div>
-          <div class="titulo_arroba">
-            <p>Usuário</p>
-          </div>
-          <div class="titulo_pontuacao">
-            <p>Pontuação</p>
-          </div>
-        </div>
-      
-        <!-- Exibir o conteúdo -->
-        {#if erro}
-          <p>Erro: {erro}</p>
-        {:else if perfil}
-          {#each perfil.relacionamento.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage) as pessoa, index}
-            <div class="list_resposta">
-              <div class="resposta_posicao">
-                <p>{currentPage * itemsPerPage + index + 1}</p>
-              </div>
-              <div class="resposta_arroba">
-                <p>{pessoa.arroba}</p>
-              </div>
-              <div class="resposta_pontuacao">
-                <p>{pessoa.pontuacao}</p>
-              </div>
+                {#each services as service}
+                    <div class="dish">
+                        <div class="dish-heart">
+                            <i class="fa-solid fa-heart"></i>
+                        </div>
+        
+                        <img src={service.path_foto} class="dish-image" alt={service.nome}>
+        
+                        <h3 class="dish-title">{service.nome}</h3>
+        
+                        <span class="dish-description">{service.descricao}</span>
+        
+                        <div class="dish-rate">
+                            {#each renderStars(service.avaliacao) as _, i}
+                                <i class="fa-solid fa-star" key={i}></i>
+                            {/each}
+                        </div>
+        
+                        <div class="dish-price">
+                            <h4>{service.valor}</h4>
+                            <button class="btn-default">
+                                <i class="fa-solid fa-basket-shopping"></i>
+                            </button>
+                        </div>
+                    </div>
+                {/each}
             </div>
-          {/each}
-          
-          <!-- Botões de navegação -->
-          <div class="pagination">
-            <button on:click={prevPage} disabled={currentPage === 0}>Anterior</button>
-            <button on:click={nextPage} disabled={(currentPage + 1) * itemsPerPage >= perfil.relacionamento.length}>Próximo</button>
-          </div>
-        {:else}
-          <p>Carregando...</p>
-        {/if}
-      </div>
-      
+        </section>
 
-    <div class="informacoes_intervalo">
-        <div class="time">
-            <div class="time_inicial">
-                <img src="/img/img_dash/datas.png" alt="">
-                <p>
-                    Data Inicial
-                </p>
+        <section id="testimonials">
+            <img src="src/images/chef.png" id="testimonial_chef" alt="">
+
+            <div id="testimonials_content">
+                <h2 class="section-title">
+                    Depoimentos
+                </h2>
+                <h3 class="section-subtitle">
+                    O que os clientes falam sobre nós
+                </h3>
+
+                <div id="feedbacks">
+                    <div class="feedback">
+                        <img src="src/images/avatar.png" class="feedback-avatar" alt="">
+
+                        <div class="feedback-content">
+                            <p>
+                                Fulana de Tal
+                                <span>
+                                    <i class="fa-solid fa-star"></i>
+                                    <i class="fa-solid fa-star"></i>
+                                    <i class="fa-solid fa-star"></i>
+                                    <i class="fa-solid fa-star"></i>
+                                    <i class="fa-solid fa-star"></i>
+                                </span>
+                            </p>
+                            <p>
+                                "Lorem ipsum dolor sit, amet consectetur adipisicing elit.
+                                Repellat voluptatibus cumque dolor ea est quae alias necessitatibus"
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="feedback">
+                        <img src="src/images/avatar.png" class="feedback-avatar" alt="">
+
+                        <div class="feedback-content">
+                            <p>
+                                Fulana de Tal
+                                <span>
+                                    <i class="fa-solid fa-star"></i>
+                                    <i class="fa-solid fa-star"></i>
+                                    <i class="fa-solid fa-star"></i>
+                                    <i class="fa-solid fa-star"></i>
+                                    <i class="fa-solid fa-star"></i>
+                                </span>
+                            </p>
+                            <p>
+                                "Lorem ipsum dolor sit, amet consectetur adipisicing elit.
+                                Repellat voluptatibus cumque dolor ea est quae alias necessitatibus"
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn-default">
+                    Ver mais avaliações
+                </button>
             </div>
-            <div class="time_final">
-                <img src="/img/img_dash/datas.png" alt="">
-                <p>
-                    Data Final
-                </p>
-            </div>
-        </div>
-        <div class="grafico enagajamento_por_hora_do_dia">
-            <p class="titulo_graficos">
-                Horários de Engajamento
-            </p>
-            <PorHoraDoDia/>
-        </div>
-        <div class="grafico engajamento_ao_longo_do_tempo">
-            <p class="titulo_graficos">
-                Oscilação de Engajamento
-            </p>
-            <Engajamento/>
-            
-        </div>
-        <div class="grafico seguidores_e_nao_seguidores">
-            <p class="titulo_graficos">
-                Interceção de Seguidores
-            </p>
-            <SeguidoresENaoSeguidores/>
-            
-        </div>
-        <div class="comentarios_repetidos">
-            <div class="titulo">
-                <div class="posicao">
-                    <p>
-                        Posição
+        </section>
+    </main>
 
-                    </p>
-                </div>
-                <div class="conteudo">
-                    <p>
-                        Conteúdo
-                    </p>
+    <footer>
+        <img src="src/images/wave.svg" alt="">
 
-                </div>
-                <div class="usuario">
-                    <p>
-                        cp2caxias
-                    </p>
+        <div id="footer_items">
+            <span id="copyright">
+                &copy 2024 Adeilton Filho, Criptenor.
+            </span>
 
-                </div>
-            </div>
-            <div class="comentarios">
-                <div class="posicao">
-                    <p>
-                        1
+            <div class="social-media-buttons">
+                <a target="_blank" href="https://wa.me/+5521980856675">
+                    <i class="fa-brands fa-whatsapp"></i>
+                </a>
 
-                    </p>
-                </div>
-                <div class="conteudo">
-                    <p>
-                        Lorem ipsum dolor sit amet consectetur adipisicing elit. Nisi porro facere nam maiores reiciendis, neque officiis natus consequuntur rem, laboriosam minima est odit et in tempore unde doloribus excepturi fugiat?
-                    </p>
+                <a target="_blank" href="https://www.instagram.com/criptenor">
+                    <i class="fa-brands fa-instagram"></i>
+                </a>
 
-                </div>
-                <div class="usuario">
-                    <p>
-                        Comentário
-                    </p>
-
-                </div>
-
-            </div>
-            <div class="comentarios">
-                <div class="posicao">
-                    <p>
-                        2
-
-                    </p>
-                </div>
-                <div class="conteudo">
-                    <p>
-                        Lorem ipsum dolor sit amet consectetur adipisicing elit. Nisi porro facere nam maiores reiciendis, neque officiis natus consequuntur rem, laboriosam minima est odit et in tempore unde doloribus excepturi fugiat?
-                    </p>
-
-                </div>
-                <div class="usuario">
-                    <p>
-                        adeiltonfilho80
-                    </p>
-
-                </div>
-
+                <a target="_blank" href="https://www.facebook.com/">
+                    <i class="fa-brands fa-facebook"></i>
+                </a>
             </div>
         </div>
-
-    </div>
-
-
-   
-    
-
-</div>
-
-
+    </footer>
+    <script src="landding/javascript/script.js"></script>
+</body>
+</html>

@@ -116,24 +116,27 @@
   .logo{
     display: flex;
   }
+  .button_analise{
+    text-decoration: none;
+  }
 </style>
 
 <header>
   <nav id="navbar">
     <div class="logo">
       <img src="criptenor.png" width="30" height="30" alt="Logo Criptenor">
-      <span id="nav_logo">Criptenor</span>
+      <span id="nav_logo">CRIPTENOR</span>
     </div>
 
     <ul id="nav_list">
       <li class="nav-item active">
-        <a href="#home">Início</a>
+        <a href="/#home">Início</a>
       </li>
       <li class="nav-item">
-        <a href="#menu">Serviços</a>
+        <a href="/#menu">Serviços</a>
       </li>
       <li class="nav-item">
-        <a href="#testimonials">Avaliações</a>
+        <a href="/#testimonials">Avaliações</a>
       </li>
 
       {#if userId === 1}
@@ -152,10 +155,12 @@
         </li>
       {/if}
     </ul>
-
-    <button class="btn-default">
-      Peça aqui
-    </button>
+    <a class="button_analise" href="/dashboard">
+      <button class="btn-default">
+        Começar Análise
+      </button>
+    </a>
+    
 
     <button id="mobile_btn">
       <i class="fa-solid fa-bars"></i>

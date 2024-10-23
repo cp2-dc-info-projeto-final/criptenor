@@ -3,6 +3,7 @@
     
     import AdmAudit from "../componentes/user_audit/AdmAudit.svelte";
 </script>
+<link rel="stylesheet" href="landding/styles/styles.css">
 <style>
 .crud_adm{
     border-radius: 16px;
@@ -40,37 +41,69 @@
     padding: 3px;
     
 }
+.body{
+    display: flex;
+}
+.menu_adm{
+    background-color: blueviolet;
+    width: 25%;
+    height: 75vh;
+    margin: 1%;
+    border-radius: 16px;
+}
+.menu_item{
+    display: flex;
+    border: 1px black solid;
+    border-radius: 16px;
+    justify-content: space-evenly;
 
+}
+.menu_adm{
+    padding: 10px;
+}
 </style>
 
 <AdmAudit/>
 <Nav/>
-<div class="crud_adm">
-    <div class="crud_titulo">
-        <div class="item_titulo">
-            <p>Nome</p>
+<div class="body">
+    <div class="menu_adm">
+        <div class="menu_item">
+            <div class="titulo">
+                <p>Usuários</p>
+            </div>
+            <div class="icon">
+                <img src="" alt="U">
+            </div>
         </div>
-        <div class="item_titulo">
-            <p>Ações</p>
-        </div>
+
     </div>
-    <div class="crud_elementos">
-        <div class="elemento_item">
-            Adeilton dos Santos Silva Filho
+    <div class="crud_adm">
+        <div class="crud_titulo">
+            <div class="item_titulo">
+                <p>Nome</p>
+            </div>
+            <div class="item_titulo">
+                <p>Ações</p>
+            </div>
         </div>
-        <div class="elemento_item">
-            <div class="icons">
-                <div class="delete">
-                    <button>
-                        <img src="img/adm/lata-de-lixo.png" alt="Lata de Lixo">
-                    </button>
-                    
-                </div>
-                <div class="edit">
-                    <button>
-                        <img src="img/adm/editar.png" alt="">
-                    </button>
-                    
+        <div class="crud_elementos">
+            <div class="elemento_item">
+                Adeilton dos Santos Silva Filho
+            </div>
+            <div class="elemento_item">
+                <div class="icons">
+                    <div class="delete">
+                        <button>
+                            <img src="img/adm/lata-de-lixo.png" alt="Lata de Lixo">
+                        </button>
+                        
+                    </div>
+                    <div class="edit">
+                        <button>
+                            <img src="img/adm/editar.png" alt="">
+                        </button>
+                        
+                    </div>
                 </div>
             </div>
         </div>

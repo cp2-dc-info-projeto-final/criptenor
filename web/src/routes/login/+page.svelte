@@ -39,7 +39,7 @@
     }
   }
 </script>
-
+<link rel="stylesheet" href="landding/styles/styles.css">
 <style>
   /* From Uiverse.io by Yaya12085 */ 
   .body {
@@ -197,6 +197,7 @@
       <p class="message">Ainda não tenho conta!</p>
       <div class="line"></div>
     </div>
-    <button class="sign">Cadastre-se</button>
+    <a href="/cadastro"><button class="sign">Cadastre-se</button></a>
+    
   </div>
 </div>
