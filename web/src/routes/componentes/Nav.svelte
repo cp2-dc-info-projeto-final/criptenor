@@ -67,7 +67,7 @@
   }
 
   .btn-default {
-    background-color: transparent;
+  
     border: none;
     cursor: pointer;
     font-size: 16px;

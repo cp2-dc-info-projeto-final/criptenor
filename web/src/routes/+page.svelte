@@ -55,12 +55,12 @@
             <div class="shape"></div>
             <div id="cta">
                 <h1 class="title">
-                    Análise de redes
-                    <span>você no controle.</span>
+                    A rede de propaganda
+                    <span>a sua disposição.</span>
                 </h1>
 
                 <p class="description">
-                    Nós da criptenor, fazemos uma análise de dados profunda das suas redes sociais e entregamos para você.
+                    A "Rede de Propaganda" da Criptenor é uma ferramenta sofisticada, desenvolvida para compreender a dinâmica das interações nas redes sociais, identificando padrões de comportamento e preferências dos eleitores. Utilizando algoritmos avançados de análise de dados, a plataforma é capaz de segmentar o público-alvo de forma precisa, direcionando mensagens e conteúdos políticos de acordo com as características e interesses de cada grupo de eleitores.
                 </p>
 
                 <div id="cta_buttons">

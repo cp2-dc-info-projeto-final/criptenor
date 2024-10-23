@@ -357,6 +357,59 @@ app.get('/servicos', async (req, res) => {
   }
 });
 
+// Método para pegar todos os registros da tabela usuario_apk
+app.get('/pegar_usuarios_apk', async (req, res) => {
+  try {
+    // Consulta ao banco de dados para pegar todos os usuários da tabela usuario_apk
+    const { data, error } = await supabase
+      .from('usuario_apk') // Certifique-se de que este é o nome correto da tabela
+      .select('*'); // Seleciona todas as colunas
+
+    if (error) {
+      // Retorna um erro 500 se ocorrer algum erro na consulta
+      return res.status(500).json({ error: 'Erro ao buscar os usuários' });
+    }
+
+    // Retorna os dados obtidos da consulta
+    return res.status(200).json(data);
+  } catch (err) {
+    // Em caso de erro interno no servidor, retornar erro 500
+    console.error('Erro interno do servidor:', err);
+    return res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Rota POST para apagar um usuário, passando o ID no corpo da requisição
+app.post('/usuario-apk/apagar', async (req, res) => {
+  const { id } = req.body; // Obtém o ID do corpo da requisição
+
+  if (!id) {
+    return res.status(400).json({ error: 'ID do usuário é obrigatório' });
+  }
+
+  try {
+    // Deletar o usuário pelo ID
+    const { data, error } = await supabase
+      .from('usuario_apk')
+      .delete()
+      .eq('id', id); // Deletar onde o ID corresponde ao parâmetro passado
+
+    if (error) {
+      return res.status(500).json({ error: 'Erro ao apagar o usuário' });
+    }
+
+    if (!data.length) {
+      return res.status(404).json({ error: 'Usuário não encontrado' });
+    }
+
+    res.status(200).json({ message: 'Usuário apagado com sucesso' });
+  } catch (err) {
+    console.error('Erro interno do servidor:', err);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+
 
 
 // Iniciar o servidor
