@@ -90,7 +90,7 @@ app.post('/cadastro_usuario', async (req, res) => {
     const { data, error } = await supabase
       .from('usuario_apk')
       .insert([{ 
-        nome: nome,
+        nome:nome,
         usuario: email, 
         arroba: arroba, 
         senha: hashedPassword // Armazenando a senha criptografada
