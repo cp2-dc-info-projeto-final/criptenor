@@ -2,6 +2,7 @@
     import Nav from "../componentes/Nav.svelte";
     import AdmAudit from "../componentes/user_audit/AdmAudit.svelte";
     import ListaUsuarios from "../componentes/adm/ListaUsuarios.svelte";
+    import ListaServicosEdit from "../componentes/adm/ListaServicosEdit.svelte";
 
 
     let activeComponent = 'usuarios';
@@ -97,7 +98,7 @@
         <ListaUsuarios />
     </div>
     <div id="servicos_container" style:display={activeComponent === 'servicos' ? 'block' : 'none'}>
-        
+        <ListaServicosEdit/>
     </div>
     <div id="comentarios_container" style:display={activeComponent === 'comentarios' ? 'block' : 'none'}>
         

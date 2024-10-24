@@ -1,6 +1,4 @@
-<script>
-  import Nav from "../componentes/Nav.svelte";
-</script>
+
 
 <style>
 .body{
@@ -74,9 +72,6 @@
 </style>
 <link rel="stylesheet" href="landding/styles/styles.css">
 
-<Nav/>
-
-<div class="body">
 <div class="form-container">
   <p class="title">Cadastrar Serviço</p>
   <!-- O campo action aponta para o endpoint do servidor -->
@@ -100,4 +95,4 @@
     <button class="sign" type="submit">Cadastrar Serviço</button>
   </form>
 </div>
-</div>
+

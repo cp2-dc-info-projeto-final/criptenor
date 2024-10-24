@@ -1,6 +1,6 @@
 <script>
     import Nav from "./componentes/Nav.svelte";
-
+    import FormularioAvaliacao from "./componentes/avaliacao/FormularioAvaliacao.svelte";
     import { onMount } from "svelte";
 
     // Variável reativa que armazenará os dados dos serviços
@@ -19,21 +19,44 @@
         }
     }
 
-    // onMount: Executa a função quando o componente é montado
+    // Chama a função de busca ao montar o componente
     onMount(() => {
         fetchServices();
+        fetchAvaliacoes();
     });
 
     // Função auxiliar para renderizar estrelas
     function renderStars(stars) {
         return Array(stars).fill(0);
     }
+
+    let feedbacks = [];
+    let currentPage = 0; // Controla a página atual
+    const itemsPerPage = 5; // Número de avaliações por página
+
+    // Função para buscar avaliações do backend
+    async function fetchAvaliacoes() {
+        try {
+            const response = await fetch('http://localhost:3000/avaliacoes'); // Ajuste a URL conforme necessário
+            if (!response.ok) throw new Error('Erro ao buscar avaliações');
+            feedbacks = await response.json();
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    // Função para mudar a página
+    function changePage(direction) {
+        currentPage += direction;
+    }
+
+    // Calcula as avaliações a serem exibidas na página atual
+    $: displayedFeedbacks = feedbacks.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage);
+
+    // Calcula se os botões de navegação devem ser habilitados ou não
+    $: canGoBack = currentPage > 0;
+    $: canGoForward = (currentPage + 1) * itemsPerPage < feedbacks.length;
 </script>
-
-
-
-
-
 
 <html lang="pt-br">
 <head>
@@ -49,7 +72,6 @@
 <body>
     <Nav/>
     
-
     <main id="content">
         <section id="home">
             <div class="shape"></div>
@@ -135,7 +157,7 @@
         </section>
 
         <section id="testimonials">
-            <img src="src/images/chef.png" id="testimonial_chef" alt="">
+            <FormularioAvaliacao />
 
             <div id="testimonials_content">
                 <h2 class="section-title">
@@ -146,54 +168,39 @@
                 </h3>
 
                 <div id="feedbacks">
-                    <div class="feedback">
-                        <img src="src/images/avatar.png" class="feedback-avatar" alt="">
-
+                    {#each displayedFeedbacks as { avaliador, resposta, pontos }}
+                      <div class="feedback">
                         <div class="feedback-content">
-                            <p>
-                                Fulana de Tal
-                                <span>
-                                    <i class="fa-solid fa-star"></i>
-                                    <i class="fa-solid fa-star"></i>
-                                    <i class="fa-solid fa-star"></i>
-                                    <i class="fa-solid fa-star"></i>
-                                    <i class="fa-solid fa-star"></i>
-                                </span>
-                            </p>
-                            <p>
-                                "Lorem ipsum dolor sit, amet consectetur adipisicing elit.
-                                Repellat voluptatibus cumque dolor ea est quae alias necessitatibus"
-                            </p>
+                          <p class="feedback-avaliador">
+                            {avaliador}
+                          </p>
+                          <p class="feedback-resposta">
+                            {resposta}
+                          </p>
+                          <p class="feedback-pontos">
+                            <span>
+                              {#each Array(pontos) as _, i}
+                                <i class="fa-solid fa-star" style="color:yellow" key={i}></i>
+                              {/each}
+                            </span>
+                          </p>
                         </div>
-                    </div>
+                      </div>
+                    {/each}
+                  </div>
 
-                    <div class="feedback">
-                        <img src="src/images/avatar.png" class="feedback-avatar" alt="">
-
-                        <div class="feedback-content">
-                            <p>
-                                Fulana de Tal
-                                <span>
-                                    <i class="fa-solid fa-star"></i>
-                                    <i class="fa-solid fa-star"></i>
-                                    <i class="fa-solid fa-star"></i>
-                                    <i class="fa-solid fa-star"></i>
-                                    <i class="fa-solid fa-star"></i>
-                                </span>
-                            </p>
-                            <p>
-                                "Lorem ipsum dolor sit, amet consectetur adipisicing elit.
-                                Repellat voluptatibus cumque dolor ea est quae alias necessitatibus"
-                            </p>
-                        </div>
-                    </div>
+                <div class="pagination">
+                    <button class="btn-default" on:click={() => changePage(-1)} disabled={!canGoBack}>
+                        Voltar
+                    </button>
+                    <button class="btn-default" on:click={() => changePage(1)} disabled={!canGoForward}>
+                        Avançar
+                    </button>
                 </div>
-
-                <button class="btn-default">
-                    Ver mais avaliações
-                </button>
             </div>
         </section>
+     
+       
     </main>
 
     <footer>
@@ -219,6 +226,7 @@
             </div>
         </div>
     </footer>
-    <script src="landding/javascript/script.js"></script>
+    <script src="landding/js/scrollreveal.js"></script>
+    <script src="landding/js/script.js"></script>
 </body>
 </html>

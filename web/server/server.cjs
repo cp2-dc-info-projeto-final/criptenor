@@ -107,6 +107,42 @@ app.post('/cadastro_usuario', async (req, res) => {
   }
 });
 
+// Rota POST para inserir uma nova avaliação
+// Rota POST para inserir uma nova avaliação
+app.post('/inserir_avaliacao', async (req, res) => {
+  const { resposta, pontos, avaliador } = req.body;
+
+  // Validação básica
+  if (!resposta || !pontos || !avaliador) {
+    return res.status(400).json({ error: 'Todos os campos (resposta, pontos, avaliador) são obrigatórios' });
+  }
+
+  try {
+    // Inserir a nova avaliação na tabela 'avaliacao'
+    const { data, error } = await supabase
+      .from('avaliacao')
+      .insert([{ 
+        resposta: resposta,
+        pontos: pontos,
+        avaliador: avaliador
+      }]);
+
+    // Verifica se ocorreu algum erro na inserção
+    if (error) {
+      return res.status(500).json({ error: 'Erro ao inserir avaliação' });
+    }
+
+    // Redireciona para a raiz após inserção bem-sucedida
+    res.redirect('http://localhost:5173/#avaliacao_form');
+    
+  } catch (err) {
+    console.error('Erro interno do servidor:', err);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+
+
 
 // Configuração da sessão
 
@@ -323,6 +359,30 @@ app.get('/analise-perfil-por-id/:id', async (req, res) => {
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
+
+
+// Rota GET para obter todas as avaliações
+app.get('/avaliacoes', async (req, res) => {
+  try {
+    // Consulta todas as avaliações da tabela 'avaliacao'
+    const { data, error } = await supabase
+      .from('avaliacao')
+      .select('*'); // Usa '*' para selecionar todas as colunas
+
+    // Verifica se ocorreu algum erro na consulta
+    if (error) {
+      return res.status(500).json({ error: 'Erro ao buscar avaliações' });
+    }
+
+    // Retorna as avaliações encontradas
+    res.status(200).json(data);
+    
+  } catch (err) {
+    console.error('Erro interno do servidor:', err);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 
 // Rota POST para cadastrar um novo serviço
 app.post('/cadastro_servico', async (req, res) => {
