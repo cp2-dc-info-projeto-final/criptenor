@@ -1,7 +1,8 @@
 <script>
     import Nav from "./componentes/Nav.svelte";
     import FormularioAvaliacao from "./componentes/avaliacao/FormularioAvaliacao.svelte";
-    import { onMount } from "svelte";
+    import { onMount } from "svelte";   
+    import ListaSevicos from "./componentes/adm/ListaSevicos.svelte";
 
     // Variável reativa que armazenará os dados dos serviços
     let services = [];
@@ -32,7 +33,7 @@
 
     let feedbacks = [];
     let currentPage = 0; // Controla a página atual
-    const itemsPerPage = 5; // Número de avaliações por página
+    const itemsPerPage = 4; // Número de feedbacks por página
 
     // Função para buscar avaliações do backend
     async function fetchAvaliacoes() {
@@ -56,6 +57,7 @@
     // Calcula se os botões de navegação devem ser habilitados ou não
     $: canGoBack = currentPage > 0;
     $: canGoForward = (currentPage + 1) * itemsPerPage < feedbacks.length;
+    
 </script>
 
 <html lang="pt-br">
@@ -122,37 +124,9 @@
             <h2 class="section-title">Serviços</h2>
             <h3 class="section-subtitle">Análise de Dados</h3>
         
-            <div id="dishes">
-                {#if services.length === 0}
-                    <p>Carregando serviços...</p>
-                {/if}
+            <div id="dishes dishes_servicos">
                 
-                {#each services as service}
-                    <div class="dish">
-                        <div class="dish-heart">
-                            <i class="fa-solid fa-heart"></i>
-                        </div>
-        
-                        <img src={service.path_foto} class="dish-image" alt={service.nome}>
-        
-                        <h3 class="dish-title">{service.nome}</h3>
-        
-                        <span class="dish-description">{service.descricao}</span>
-        
-                        <div class="dish-rate">
-                            {#each renderStars(service.avaliacao) as _, i}
-                                <i class="fa-solid fa-star" key={i}></i>
-                            {/each}
-                        </div>
-        
-                        <div class="dish-price">
-                            <h4>{service.valor}</h4>
-                            <button class="btn-default">
-                                <i class="fa-solid fa-basket-shopping"></i>
-                            </button>
-                        </div>
-                    </div>
-                {/each}
+                <ListaSevicos/>
             </div>
         </section>
 
@@ -199,8 +173,6 @@
                 </div>
             </div>
         </section>
-     
-       
     </main>
 
     <footer>
@@ -226,7 +198,7 @@
             </div>
         </div>
     </footer>
-    <script src="landding/js/scrollreveal.js"></script>
-    <script src="landding/js/script.js"></script>
+    <script src="landding/javascript/scrollreveal.js"></script>
+    <script src="landding/javascript/script.js"></script>
 </body>
 </html>

@@ -65,7 +65,7 @@ app.post('/cadastro_usuario', async (req, res) => {
   const { email, nome, arroba, senha } = req.body;
 
   if (!email || !arroba || !senha || !nome) {
-    return res.status(400).json({ error: 'Email, arroba e senha são obrigatórios' });
+    return res.status(400).json({ error: 'Email, arroba, nome e senha são obrigatórios' });
   }
 
   try {
@@ -73,13 +73,14 @@ app.post('/cadastro_usuario', async (req, res) => {
     const { data: existingUser, error: checkError } = await supabase
       .from('usuario_apk')
       .select('*')
-      .or(`usuario.eq.${email}`);
+      .or(`usuario.eq.${email},arroba.eq.${arroba}`);
 
     if (checkError) {
+      console.error(checkError); // Logar o erro para depuração
       return res.status(500).json({ error: 'Erro ao verificar usuário existente' });
     }
 
-    if (existingUser.length > 0) {
+    if (existingUser && existingUser.length > 0) {
       return res.status(400).json({ error: 'Usuário já cadastrado com esse email ou arroba' });
     }
 
@@ -90,22 +91,25 @@ app.post('/cadastro_usuario', async (req, res) => {
     const { data, error } = await supabase
       .from('usuario_apk')
       .insert([{ 
-        nome:nome,
+        nome: nome,
         usuario: email, 
         arroba: arroba, 
         senha: hashedPassword // Armazenando a senha criptografada
       }]);
 
     if (error) {
+      console.error(error); // Logar o erro para depuração
       return res.status(500).json({ error: 'Erro ao cadastrar o usuário' });
     }
 
-    // Redirecionar para a página inicial após o sucesso do cadastro
-    res.redirect('http://localhost:5173/');
+    // Responder com sucesso em vez de redirecionar
+    res.status(200).json({ message: 'Usuário cadastrado com sucesso' });
   } catch (err) {
+    console.error(err); // Logar o erro para depuração
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
+
 
 // Rota POST para inserir uma nova avaliação
 // Rota POST para inserir uma nova avaliação
@@ -386,34 +390,43 @@ app.get('/avaliacoes', async (req, res) => {
 
 // Rota POST para cadastrar um novo serviço
 app.post('/cadastro_servico', async (req, res) => {
-  const { nome, descricao, avaliacao, valor } = req.body;
+  const { nome, descricao, avaliacao, valor, path_img } = req.body;
 
-  // Verificar se os campos obrigatórios estão presentes
-  if (!nome || !descricao || !avaliacao || !valor) {
-    return res.status(400).json({ error: 'Nome, descrição, avaliação e valor são obrigatórios' });
+  // Declare avaliacao_padrao fora do bloco condicional
+  let avaliacao_padrao;
+
+  // Verifique se avaliacao é um número
+  if (isNaN(avaliacao)) {
+    avaliacao_padrao = 5; // Valor padrão se avaliacao não for um número
+  } else {
+    avaliacao_padrao = avaliacao; // Use o valor fornecido
   }
 
   try {
-    // Inserir o novo serviço na tabela 'servico'
+    // Inserir o novo serviço na tabela 'servicos'
     const { data, error } = await supabase
       .from('servicos')
       .insert([{ 
         nome: nome,
         descricao: descricao,
-        avaliacao: avaliacao,
-        valor: valor
+        avaliacao: avaliacao_padrao,
+        valor: valor,
+        path_foto: path_img
       }]);
 
     if (error) {
       return res.status(500).json({ error: 'Erro ao cadastrar o serviço' });
     }
 
+    // Resposta de sucesso (opcional)
+    return res.status(200).json();
     
   } catch (err) {
     console.error('Erro interno do servidor:', err);
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
+
 
 // Rota para buscar todos os serviços prestados
 app.get('/servicos', async (req, res) => {
@@ -480,6 +493,136 @@ app.post('/usuario-apk/apagar', async (req, res) => {
     
   }
 });
+// Rota DELETE para apagar uma avaliação pelo ID
+app.delete('/avaliacao/:id', async (req, res) => {
+  const { id } = req.params;
+
+  // Validação básica
+  if (!id) {
+    return res.status(400).json({ error: 'ID da avaliação é obrigatório' });
+  }
+
+  try {
+    // Deletar a avaliação da tabela 'avaliacao'
+    const { data, error } = await supabase
+      .from('avaliacao')
+      .delete()
+      .eq('id', id);
+
+   
+
+    // Retorna uma mensagem de sucesso
+    res.status(200).json({ message: 'Avaliação apagada com sucesso' });
+  } catch (err) {
+    console.error('Erro interno do servidor:', err);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Rota DELETE para apagar uma avaliação pelo ID
+app.delete('/servicos_delete/:id', async (req, res) => {
+  const { id } = req.params;
+
+  // Validação básica
+  if (!id) {
+    return res.status(400).json({ error: 'ID da avaliação é obrigatório' });
+  }
+
+  try {
+    // Deletar a avaliação da tabela 'avaliacao'
+    const { data, error } = await supabase
+      .from('servicos')
+      .delete()
+      .eq('id', id);
+
+   
+
+    // Retorna uma mensagem de sucesso
+    res.status(200).json({ message: 'Avaliação apagada com sucesso' });
+  } catch (err) {
+    console.error('Erro interno do servidor:', err);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Rota PUT para atualizar um serviço específico pelo ID
+// Método para alterar o serviço
+app.post('/alterar_servico', async (req, res) => {
+  const { id, nome, descricao, valor } = req.body;
+
+  if (!id) {
+    return res.status(400).json({ error: 'ID do serviço é obrigatório' });
+  }
+
+  // Define um objeto para armazenar os campos a serem atualizados
+  const camposAtualizados = {};
+
+  // Adiciona os campos enviados no corpo da requisição ao objeto de atualização
+  if (nome) camposAtualizados.nome = nome;
+  if (descricao) camposAtualizados.descricao = descricao;
+  if (valor) camposAtualizados.valor = valor;
+
+  try {
+    // Atualiza o serviço no banco de dados usando o Supabase
+    const { data, error } = await supabase
+      .from('servicos') // Nome da tabela no banco de dados
+      .update(camposAtualizados) // Campos a serem atualizados dinamicamente
+      .eq('id', id); // Condição para localizar o registro correto
+
+    if (error) {
+      return res.status(500).json({ error: 'Erro ao atualizar o serviço' });
+    }
+
+    // Retorna uma resposta de sucesso
+    res.status(200).json({ message: 'Serviço atualizado com sucesso', data });
+  } catch (err) {
+    console.error('Erro interno do servidor:', err);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+
+const multer = require('multer');
+const path = require('path');
+
+// Configuração do multer para upload de arquivos
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
+
+// Rota para fazer upload de uma imagem
+app.post('/upload-imagem', upload.single('imagem'), async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'Arquivo não enviado' });
+  }
+
+  try {
+    // Define o caminho do arquivo no bucket (app/servicos)
+    const filePath = `servicos/${Date.now()}_${req.file.originalname}`;
+
+    // Faz upload da imagem para o Supabase
+    const { data, error } = await supabase.storage.from('app').upload(filePath, req.file.buffer, {
+      cacheControl: '3600',
+      upsert: false
+    });
+
+    if (error) {
+      console.error('Erro no upload:', error); // Log do erro para depuração
+      return res.status(500).json({ error: 'Erro ao fazer upload da imagem' });
+    }
+
+    // Gera a URL da imagem
+    const imageUrl = `${supabaseUrl}/storage/v1/object/public/app/${filePath}`;
+    return res.status(200).json({ url: imageUrl });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+
+
+
+
 
 
 

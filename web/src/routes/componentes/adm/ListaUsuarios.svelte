@@ -3,6 +3,9 @@
     let usuarios = [];
     let usuarioSelecionado = null;
     let mostrarPopup = false;
+    let nome = '';
+    let email = '';
+    let descricao = '';
 
     // Função para buscar os dados dos usuários do endpoint
     const fetchUsuarios = async () => {
@@ -40,16 +43,50 @@
         }
     };
 
-    // Função para abrir o popup de confirmação
+    // Função para abrir o popup de edição
     const abrirPopup = (usuario) => {
         usuarioSelecionado = usuario;
+        nome = usuario.nome;
+        email = usuario.email;
+        descricao = usuario.descricao;
         mostrarPopup = true;
     };
 
     // Função para fechar o popup
     const fecharPopup = () => {
         usuarioSelecionado = null;
+        nome = '';
+        email = '';
+        descricao = '';
         mostrarPopup = false;
+    };
+
+    // Função para editar o usuário
+    const editarUsuario = async () => {
+        try {
+            const response = await fetch('http://localhost:3000/usuario-apk/editar', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    id: usuarioSelecionado.id,
+                    nome,
+                    email,
+                    descricao,
+                }),
+            });
+            if (response.ok) {
+                // Atualiza a lista de usuários após a edição
+                const usuarioEditado = await response.json();
+                usuarios = usuarios.map(usuario => usuario.id === usuarioEditado.id ? usuarioEditado : usuario);
+                fecharPopup();
+            } else {
+                console.error('Erro ao editar:', response.statusText);
+            }
+        } catch (error) {
+            console.error('Erro ao editar:', error);
+        }
     };
 
     // Chama a função ao carregar o componente
@@ -87,7 +124,6 @@
     .icons button {
         border: 0;
         background-color: transparent;
-
     }
     .icons img {
         width: 25px;
@@ -113,9 +149,21 @@
         padding: 20px;
         border-radius: 10px;
         text-align: center;
+        min-width: 300px;
     }
     .popup-content button {
         margin: 10px;
+    }
+    /* Estilo do formulário */
+    .formulario {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .formulario input {
+        padding: 8px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
     }
 </style>
 
@@ -143,7 +191,7 @@
                         </button>
                     </div>
                     <div class="edit">
-                        <button>
+                        <button on:click={() => abrirPopup(usuario)}>
                             <img src="img/adm/editar.png" alt="Editar">
                         </button>
                     </div>
@@ -153,13 +201,26 @@
     {/each}
 </div>
 
-<!-- Popup de confirmação de exclusão -->
+<!-- Popup de edição -->
 {#if mostrarPopup}
     <div class="popup">
         <div class="popup-content">
-            <p>Tem certeza que deseja excluir {usuarioSelecionado.nome}?</p>
-            <button on:click={() => excluirUsuario(usuarioSelecionado.id)}>Sim</button>
-            <button on:click={fecharPopup}>Não</button>
+            <h3>Editar Usuário</h3>
+            <div class="formulario">
+                <label for="nome">Nome</label>
+                <input type="text" id="nome" bind:value={nome} />
+                
+                <label for="email">Email</label>
+                <input type="email" id="email" bind:value={email} />
+
+                <label for="descricao">Descrição</label>
+                <input type="text" id="descricao" bind:value={descricao} />
+
+                <div>
+                    <button on:click={editarUsuario}>Salvar</button>
+                    <button on:click={fecharPopup}>Cancelar</button>
+                </div>
+            </div>
         </div>
     </div>
 {/if}

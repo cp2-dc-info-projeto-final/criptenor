@@ -7,12 +7,12 @@
   justify-content: center;
 } 
 .form-container {
-  width: 420px;
   border-radius: 0.75rem;
   background-color: rgba(17, 24, 39, 1);
   padding: 2rem;
   color: rgba(243, 244, 246, 1);
   margin-top: 10%;
+  
 }
 
 .title {
@@ -39,7 +39,7 @@
 }
 
 .input-group input, .input-group textarea {
-  width: 90%;
+  width: 100%;
   border-radius: 0.375rem;
   border: 1px solid rgba(55, 65, 81, 1);
   outline: 0;
@@ -72,7 +72,7 @@
 </style>
 <link rel="stylesheet" href="landding/styles/styles.css">
 
-<div class="form-container">
+<div class="form-container" style="width: 100%;">
   <p class="title">Cadastrar Serviço</p>
   <!-- O campo action aponta para o endpoint do servidor -->
   <form class="form" method="post" action="http://localhost:3000/cadastro_servico">

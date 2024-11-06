@@ -155,6 +155,9 @@
           <a href="/adm">Administração</a>
         </li>
       {/if}
+      <li class="nav-item">
+        <a href="/dashboard">Dashboard</a>
+      </li>
     </ul>
 
     <!-- Botão Entrar/Sair -->

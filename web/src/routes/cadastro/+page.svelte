@@ -2,9 +2,10 @@
 <script>
   import Nav from "../componentes/Nav.svelte";
   
-  // Função para enviar o formulário de cadastro
+  let cadastroFeito = false; // Estado para mostrar o card de feedback
+
   async function handleCadastro(event) {
-      event.preventDefault(); // Evita o envio padrão do formulário
+      event.preventDefault();
       
       const form = event.target;
       const email = form.email.value;
@@ -18,7 +19,6 @@
           return;
       }
 
-      // Realiza o cadastro
       try {
           const cadastroResponse = await fetch('http://localhost:3000/cadastro_usuario', {
               method: 'POST',
@@ -36,8 +36,7 @@
           const cadastroData = await cadastroResponse.json();
 
           if (cadastroResponse.ok) {
-              // Se o cadastro for bem-sucedido, faz o login automaticamente
-              await fazerLogin(email, senha);
+              cadastroFeito = true; // Mostra o card de confirmação se o cadastro foi bem-sucedido
           } else {
               alert(cadastroData.error || 'Erro ao fazer cadastro');
           }
@@ -47,40 +46,54 @@
       }
   }
 
-  // Função para realizar o login
-  async function fazerLogin(email, senha) {
-      try {
-          const loginResponse = await fetch('http://localhost:3000/login', {
-              method: 'POST',
-              headers: {
-                  'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                  email: email,
-                  senha: senha,
-              }),
-          });
-
-          const loginData = await loginResponse.json();
-
-          if (loginResponse.ok) {
-              // Armazena a sessão ou os dados do usuário
-              sessionStorage.setItem('user', JSON.stringify(loginData));
-
-              // Redireciona para a página inicial
-              window.location.href = '/';
-          } else {
-              alert(loginData.error || 'Erro ao fazer login');
-          }
-      } catch (error) {
-          console.error('Erro ao fazer login:', error);
-          alert('Erro ao fazer login, tente novamente mais tarde.');
-      }
+  // Função para redirecionar ao login
+  function fazerLogin() {
+      window.location.href = '/login';
   }
 </script>
+
 <style>
-  /* From Uiverse.io by Yaya12085 */ 
-.body{
+  .overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .cookie-card {
+    max-width: 320px;
+    padding: 1rem;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+  }
+
+  .overlay.hidden {
+    display: none;
+  }
+
+  .body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .form-container {
+    width: 420px;
+    border-radius: 0.75rem;
+    background-color: rgba(17, 24, 39, 1);
+    padding: 2rem;
+    color: rgba(243, 244, 246, 1);
+    margin-top: 10%;
+  }
+  
+  .body{
   display: flex;
   align-items: center;
   justify-content: center;
@@ -208,39 +221,136 @@ font-size: 0.75rem;
 line-height: 1rem;
 color: rgba(156, 163, 175, 1);
 }
+/* From Uiverse.io by Yaya12085 */ 
+.cookie-card {
+  max-width: 320px;
+  padding: 1rem;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 20px 20px 30px rgba(0, 0, 0, .05);
+}
+
+.title {
+  font-weight: 600;
+  color: rgb(31 41 55);
+}
+
+.description {
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: rgb(75 85 99);
+}
+
+.description a {
+  --tw-text-opacity: 1;
+  color: rgb(59 130 246);
+}
+
+.description a:hover {
+  -webkit-text-decoration-line: underline;
+  text-decoration-line: underline;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1rem;
+  -moz-column-gap: 1rem;
+  column-gap: 1rem;
+  flex-shrink: 0;
+}
+
+.pref {
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: rgb(31 41 55 );
+  -webkit-text-decoration-line: underline;
+  text-decoration-line: underline;
+  transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+  background-color: transparent;
+}
+
+.pref:hover {
+  color: rgb(156 163 175);
+}
+
+.pref:focus {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+.accept {
+  font-size: 0.75rem;
+  line-height: 1rem;
+  background-color: rgb(17 24 39);
+  font-weight: 500;
+  border-radius: 0.5rem;
+  color: #fff;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-top: 0.625rem;
+  padding-bottom: 0.625rem;
+  border: none;
+  transition: all .15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.accept:hover {
+  background-color: rgb(55 65 81);
+}
+
+.accept:focus {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
 
 </style>
 
 <Nav/>
 <div class="body">
-<div class="form-container">
-  <p class="title">Cadastre-se</p>
-  <!-- O formulário de cadastro agora chama a função handleCadastro -->
-  <form class="form" on:submit={handleCadastro}>
-    <div class="input-group" style="display: block;">
-      <label for="email">Email</label>
-      <input type="email" name="email" id="email" placeholder="Digite seu email" required>
-    </div>
-    <div class="input-group">
-      <label for="nome">Nome</label>
-      <input type="text" name="nome" id="nome" placeholder="Adeilton ..." required>
-    </div>
-    <div class="input-group">
-      <label for="arroba">Arroba Instagram</label>
-      <input type="text" name="arroba" id="arroba" placeholder="@usuario" required>
-    </div>
-    <div class="input-group">
-      <label for="senha">Senha</label>
-      <input type="password" name="senha" id="senha" placeholder="Digite sua senha" required>
-    </div>
-    <div class="input-group">
-      <label for="confirmSenha">Confirmar Senha</label>
-      <input type="password" name="confirmSenha" id="confirmSenha" placeholder="Confirme sua senha" required>
-      <div class="forgot">
-        <a rel="noopener noreferrer" href="#">Esqueceu a senha?</a>
+  <div class="form-container">
+    <p class="title">Cadastre-se</p>
+    <form class="form" on:submit={handleCadastro}>
+      <!-- Formulário de cadastro -->
+      <div class="input-group" style="display: block;">
+        <label for="email">Email</label>
+        <input type="email" name="email" id="email" placeholder="Digite seu email" required>
+      </div>
+      <div class="input-group">
+        <label for="nome">Nome</label>
+        <input type="text" name="nome" id="nome" placeholder="Adeilton ..." required>
+      </div>
+      <div class="input-group">
+        <label for="arroba">Arroba Instagram</label>
+        <input type="text" name="arroba" id="arroba" placeholder="@usuario" required>
+      </div>
+      <div class="input-group">
+        <label for="senha">Senha</label>
+        <input type="password" name="senha" id="senha" placeholder="Digite sua senha" required>
+      </div>
+      <div class="input-group">
+        <label for="confirmSenha">Confirmar Senha</label>
+        <input type="password" name="confirmSenha" id="confirmSenha" placeholder="Confirme sua senha" required>
+      </div>
+      <button class="sign" type="submit">Cadastrar</button>
+    </form>
+  </div>
+</div>
+
+{#if cadastroFeito}
+  <!-- Overlay com o card de confirmação -->
+  <div class="overlay">
+    <div class="cookie-card">
+      <span class="title">Cadastro Feito com Sucesso</span>
+      <p class="description">
+        Você pode prosseguir de maneira anônima <a href="#">Modo Anônimo</a>.
+      </p>
+      <div class="actions">
+        <button class="pref" on:click={() => (cadastroFeito = false)}>Fechar</button>
+        <button class="accept" on:click={fazerLogin}>Entrar</button>
       </div>
     </div>
-    <button class="sign" type="submit">Cadastrar</button>
-  </form>
-</div>
-</div>
+  </div>
+{/if}
