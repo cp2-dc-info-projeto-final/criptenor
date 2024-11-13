@@ -520,8 +520,8 @@ app.delete('/avaliacao/:id', async (req, res) => {
 });
 
 // Rota DELETE para apagar uma avaliação pelo ID
-app.delete('/servicos_delete/:id', async (req, res) => {
-  const { id } = req.params;
+app.post('/servicos_delete', async (req, res) => {
+  const { id } = req.body;  // O id vem no corpo da requisição
 
   // Validação básica
   if (!id) {
@@ -529,26 +529,26 @@ app.delete('/servicos_delete/:id', async (req, res) => {
   }
 
   try {
-    // Deletar a avaliação da tabela 'avaliacao'
+    // Deletar o serviço da tabela 'servicos'
     const { data, error } = await supabase
       .from('servicos')
       .delete()
       .eq('id', id);
 
-   
-
+    
     // Retorna uma mensagem de sucesso
-    res.status(200).json({ message: 'Avaliação apagada com sucesso' });
+    res.status(200).json({ message: 'Serviço apagado com sucesso' });
   } catch (err) {
     console.error('Erro interno do servidor:', err);
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
 
+
 // Rota PUT para atualizar um serviço específico pelo ID
 // Método para alterar o serviço
 app.post('/alterar_servico', async (req, res) => {
-  const { id, nome, descricao, valor } = req.body;
+  const { id, nome, descricao, valor, path_foto } = req.body;
 
   if (!id) {
     return res.status(400).json({ error: 'ID do serviço é obrigatório' });
@@ -561,6 +561,7 @@ app.post('/alterar_servico', async (req, res) => {
   if (nome) camposAtualizados.nome = nome;
   if (descricao) camposAtualizados.descricao = descricao;
   if (valor) camposAtualizados.valor = valor;
+  if (path_foto) camposAtualizados.path_foto
 
   try {
     // Atualiza o serviço no banco de dados usando o Supabase
@@ -585,39 +586,221 @@ app.post('/alterar_servico', async (req, res) => {
 const multer = require('multer');
 const path = require('path');
 
-// Configuração do multer para upload de arquivos
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
+const upload = multer({
+    limits: { fileSize: 5 * 1024 * 1024 }, // Limite de 5 MB
+    storage: multer.memoryStorage() // Armazenamento na memória
+});
 
-// Rota para fazer upload de uma imagem
+
+// Rota de upload de imagem
 app.post('/upload-imagem', upload.single('imagem'), async (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ error: 'Arquivo não enviado' });
-  }
+  
 
   try {
-    // Define o caminho do arquivo no bucket (app/servicos)
-    const filePath = `servicos/${Date.now()}_${req.file.originalname}`;
+    if (req.file) {
+      console.log(req.file); // Verifique se os dados da imagem estão corretos
 
-    // Faz upload da imagem para o Supabase
-    const { data, error } = await supabase.storage.from('app').upload(filePath, req.file.buffer, {
-      cacheControl: '3600',
-      upsert: false
+      const { data: uploadData} = await supabase
+          .storage
+          .from('app') // Verifique se é o bucket correto
+          .upload(`servicos/${req.file.originalname}`, req.file.buffer, {
+              contentType: req.file.mimetype
+          });
+          console.log(uploadData.path);
+          let path=uploadData.path;
+          
+          
+          
+          const {data} = await supabase
+          .storage
+          .from('app')
+          .getPublicUrl(path);
+          console.log(data)
+          var linkPublico=data.publicUrl;
+      }
+      // Faz o upload da imagem para o Supabase Storage (bucket)
+      
+
+      
+
+      // Extrai os dados do corpo da requisição
+      const { id, nome, descricao, valor } = req.body;
+      console.log(id, nome, descricao, valor, linkPublico)
+
+      // Verifica se o ID foi passado
+      
+
+      // Atualiza os dados na tabela 'servicos'
+      const { data: updateData, error: updateError } = await supabase
+          .from('servicos')
+          .update({
+              ...(nome && { nome }), // Atualiza apenas se existir
+              ...(descricao && { descricao }), // Atualiza apenas se existir
+              ...(valor && { valor }), // Atualiza apenas se existir
+              ...(path && { path_foto: linkPublico})
+          })
+          .eq('id', id)
+          .select('*'); // Retorna o registro atualizado
+
+      if (updateError) {
+          console.error('Erro ao atualizar o serviço:', updateError);
+          return res.status(500).json({ error: 'Erro ao atualizar o serviço.' });
+      }
+
+      res.status(200).json({ message: 'Serviço atualizado com sucesso.', data: updateData });
+  } catch (error) {
+      console.error('Erro interno do servidor:', error);
+      res.status(500).json({ error: 'Erro interno do servidor.' });
+  }
+});
+
+
+app.post('/cadastro_servico', upload.single('imagem'), async (req, res) => {
+  const { nome, descricao, valor } = req.body;
+  console.log('Dados recebidos:', req.body); // Debugging
+  
+  
+
+  let avaliacao_padrao = isNaN(avaliacao) ? 5 : parseFloat(avaliacao);
+
+  try {
+    // Realizando o upload da imagem para o Supabase
+    const { data: uploadData, error: uploadError } = await supabase
+      .storage
+      .from('app')
+      .upload(`servicos/${req.file.originalname}`, req.file.buffer, {
+        contentType: req.file.mimetype
+      });
+
+   
+    // Obtendo o link público da imagem
+    const { data } = await supabase
+      .storage
+      .from('app')
+      .getPublicUrl(uploadData.path);
+
+    const linkPublico = data.publicUrl;
+
+    // Inserir o novo serviço na tabela 'servicos'
+    const { data: serviceData, error: insertError } = await supabase
+      .from('servicos')
+      .insert([{
+        nome,
+        descricao,
+        avaliacao: avaliacao_padrao,
+        valor,
+        path_foto: linkPublico
+      }]);
+
+ 
+
+    return res.status(200).json({
+      message: 'Serviço cadastrado com sucesso.',
+      data: serviceData
     });
 
-    if (error) {
-      console.error('Erro no upload:', error); // Log do erro para depuração
-      return res.status(500).json({ error: 'Erro ao fazer upload da imagem' });
-    }
-
-    // Gera a URL da imagem
-    const imageUrl = `${supabaseUrl}/storage/v1/object/public/app/${filePath}`;
-    return res.status(200).json({ url: imageUrl });
   } catch (err) {
-    console.error(err);
+    console.error('Erro interno do servidor:', err);
     return res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
+
+app.get('/carrinho/:userId', async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    // Buscando os itens do carrinho com detalhes do serviço associado
+    const { data, error } = await supabase
+      .from('carrinho')
+      .select('id_servico, servicos(nome, descricao, valor)')  // Aqui estamos trazendo os detalhes do serviço
+      .eq('id_usuario', userId); // Garantindo que estamos pegando os itens do carrinho do usuário correto
+
+ 
+
+    
+    console.log(data)
+    res.json({ data});
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Erro ao buscar itens do carrinho');
+  }
+});
+
+
+
+app.post('/cadastrar_servico_no_carrinho', async (req, res) => {
+  const { id_usuario, id_servico } = req.body;
+
+  if (!id_usuario || !id_servico) {
+    return res.status(400).json({ error: 'id_usuario e id_servico são obrigatórios' });
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('carrinho') // Substitua pelo nome real da sua tabela de carrinho
+      .insert([{ id_usuario, id_servico }]);
+
+    if (error) {
+      throw error;
+    }
+
+    res.status(201).json({ message: 'Serviço adicionado ao carrinho com sucesso', data });
+  } catch (error) {
+    console.error('Erro ao cadastrar serviço no carrinho:', error);
+    res.status(500).json({ error: 'Erro ao cadastrar serviço no carrinho' });
+  }
+});
+
+
+
+// Rota para alterar os dados de um usuário pelo ID usando POST
+app.post('/alterar_usuario/:id', async (req, res) => {
+  const { id } = req.params; // ID do usuário a ser alterado
+  const { nome, arroba, email, senha } = req.body; // Novos dados para atualização
+
+  // Prepara um objeto para armazenar os dados a serem atualizados
+  const updatedData = {};
+
+  // Verifica se cada campo foi fornecido e, em caso afirmativo, adiciona ao objeto de dados a serem atualizados
+  if (nome) {
+    updatedData.nome = nome;
+  }
+
+  if (arroba) {
+    updatedData.arroba = arroba;
+  }
+
+  if (email) {
+    updatedData.usuario = email;
+  }
+
+  if (senha) {
+    // Se a senha for fornecida, geramos o hash
+    const hashedPassword = await bcrypt.hash(senha, 10);
+    updatedData.senha = hashedPassword;
+  }
+
+  try {
+    // Atualiza os dados do usuário no banco de dados
+    const { data, error } = await supabase
+      .from('usuario_apk') // Troque pelo nome da tabela correta se necessário
+      .update(updatedData)
+      .eq('id', id); // Filtra pelo ID do usuário
+
+ 
+
+    // Responde com sucesso após atualização
+    res.status(200).json({ message: 'Usuário alterado com sucesso'});
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+
+
+
+
 
 
 

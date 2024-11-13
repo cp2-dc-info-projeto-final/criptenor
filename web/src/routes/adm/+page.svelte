@@ -1,5 +1,3 @@
-
-
 <link rel="stylesheet" href="landding/styles/styles.css">
 
 <style>
@@ -10,13 +8,14 @@
         flex-direction: column;
         justify-content: space-between;
     }
-    .second{
+    .second {
         display: flex;
     }
     .menu_adm {
         background-color: blueviolet;
         width: 25%;
-        height: 75vh;
+        min-height: 75vh;
+        
         margin: 1%;
         border-radius: 16px;
         padding: 10px;
@@ -32,7 +31,6 @@
         background-color: white;
         transition: background-color 0.3s;
         flex-direction: column;
-
     }
     .menu_item:hover {
         background-color: lightgray;
@@ -60,7 +58,6 @@
     .usuario_cadastro {
         display: flex;
         flex-direction: column;
-        
     }
     .usuario_cadastro input {
         margin-top: 10px;
@@ -115,17 +112,16 @@
     .browse-button:hover {
         background-color: rgb(14, 14, 14);
     }
-    .label_input{
+    .label_input {
         display: flex;
         flex-direction: column;
         align-items: baseline;
-        margin-top:10px;
+        margin-top: 10px;
     }
-    .label_input input{
+    .label_input input {
         margin: 0;
-
     }
-    .superior_menu{
+    .superior_menu {
         display: flex;
         justify-content: space-between;
     }
@@ -140,46 +136,59 @@
     import CadastroServico from "../componentes/adm/CadastroServico.svelte";
 
     let activeComponent = 'usuarios';
-    let file; // Para armazenar o arquivo de imagem
-    let servicoNome = '';
-    let servicoDescricao = '';
-    let servicoValor = '';
-
+    let nome = '';
+    let email = '';
+    let instagram = '';
+    let senha = '';
+    let confirmarSenha = '';
+    let errorMessage = '';
+    
     function setActive(component) {
         activeComponent = component;
     }
 
     async function handleSubmit(event) {
-        event.preventDefault(); // Previne o envio padrão do formulário
+        event.preventDefault();
 
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('nome', servicoNome);
-        formData.append('descricao', servicoDescricao);
-        formData.append('valor', servicoValor);
+        // Validação do formulário
+        if (senha !== confirmarSenha) {
+            errorMessage = "As senhas não coincidem!";
+            return;
+        }
+
+        // Verificando se os dados estão corretos antes de enviar
+        console.log({ nome, email, instagram, senha }); 
+
+        const userData = {
+            nome,
+            email,
+            instagram,
+            senha
+        };
 
         try {
-            const response = await fetch(`http://localhost:3000/cadastro_servico`, { // Altere para a URL correta
+            const response = await fetch('http://localhost:3000/cadastro_usuario', { // URL do backend
                 method: 'POST',
-                body: formData,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(userData)
             });
 
             if (response.ok) {
                 const result = await response.json();
-                cadastro_servico_button=document.querySelector('')
+                alert("Usuário cadastrado com sucesso!");
                 // Aqui você pode adicionar lógica para limpar os campos ou mostrar uma mensagem de sucesso
             } else {
-                console.error('Erro ao cadastrar serviço:', response.statusText);
+                console.error('Erro ao cadastrar usuário:', response.statusText);
+                errorMessage = 'Erro ao cadastrar usuário, tente novamente.';
             }
         } catch (error) {
             console.error('Erro de rede:', error);
+            errorMessage = 'Erro de rede, tente novamente mais tarde.';
         }
     }
 </script>
-
-<link rel="stylesheet" href="landding/styles/styles.css">
-
-
 
 <AdmAudit />
 
@@ -196,31 +205,11 @@
                     <p>Usuários</p>
                     {#if activeComponent === 'usuarios'}
                     <div class="usuario_cadastro">
-                        <h3>Novo Usuário</h3>
-                        <div class="label_input">
-                            <label for="Nome">Nome:</label>
-                            <input type="text" id="Nome" placeholder="Insira o nome">
-                        </div>
-                        <div class="label_input">
-                            <label for="email">Email/Usuário:</label>
-                            <input type="text" id="email" placeholder="Insira o email">
-                        </div>
-                        <div class="label_input">
-                            <label for="arrobainstagram">Instagram:</label>
-                            <input type="text" id="arrobainstagram" placeholder="Insira o Instagram">    
-                        </div>
-                        <div class="label_input">
-                            <label for="Senha">Senha:</label>
-                            <input type="password" id="Senha" placeholder="Insira a senha">
-                        </div>
-                        <div class="label_input">
-                            <label for="ConfirmarSenha">Confirmar Senha:</label>
-                            <input type="password" id="ConfirmarSenha" placeholder="Confirme a senha">  
-                        </div>
                         
-                        <button type="submit" class="btn">
-                            Cadastrar
-                        </button>
+                        
+
+                        <!-- Formulário de Cadastro -->
+                        
                     </div>
                     {/if}
                 </div>
@@ -240,12 +229,10 @@
                     
                     {#if activeComponent === 'servicos'}
                     <div class="usuario_cadastro">
-                        
-                        <CadastroServico/>
+                        <CadastroServico />
                     </div>
                     {/if}
                 </div>
-                
             </div>
     
             <div class="menu_item {activeComponent === 'comentarios' ? 'active' : ''}" on:click={() => setActive('comentarios')}>
@@ -260,15 +247,14 @@
     
         <!-- Conteúdo dinâmico baseado no componente ativo -->
         <div id="usuario_container" style:display={activeComponent === 'usuarios' ? 'block' : 'none'}>
-            <ListaUsuarios/>
+            <ListaUsuarios />
         </div>
         <div id="servicos_container" style:display={activeComponent === 'servicos' ? 'block' : 'none'}>
-            <ListaServicosEdit/>
+            <ListaServicosEdit />
         </div>
         <div id="comentarios_container" style:display={activeComponent === 'comentarios' ? 'block' : 'none'}>
-            <Avaliacoes/>
+            <Avaliacoes />
         </div>
-        
     </div>
     <div></div>
 </div>

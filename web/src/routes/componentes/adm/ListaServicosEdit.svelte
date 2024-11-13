@@ -182,6 +182,52 @@ input{
     display: flex;
     flex-direction: column;
 }
+
+
+
+.popup {
+        position: fixed;
+        width: 250px;
+        height: 250px;
+        flex-direction: column;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: white;
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        border-radius: 8px;
+        z-index: 1000;
+    }
+    .overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+    }
+    .buttons {
+        display: flex;
+        justify-content: space-evenly;
+        margin-top: 15px;
+        width: 100%;
+    }
+    .buttons button {
+        padding: 5px 10px;
+        border-radius: 4px;
+        border: none;
+        cursor: pointer;
+    }
+    .confirm {
+        background-color: red;
+        color: white;
+    }
+    .cancel {
+        background-color: grey;
+        color: white;
+    }
 </style>
 <script>
     import { onMount } from "svelte";
@@ -190,8 +236,10 @@ input{
     let mostrarPopup = false;
     let nomeServico = '';
     let descricaoServico = '';
+    let id=0;
     let valorServico = '';
-    let fotoServico = null; // para armazenar o arquivo de foto
+    let fotoServico = null; // Para armazenar a URL da imagem
+    let fileInput; // Referência ao elemento input de arquivo
 
     // Função para buscar os dados dos serviços do endpoint
     const fetchServicos = async () => {
@@ -199,7 +247,6 @@ input{
             const response = await fetch('http://localhost:3000/servicos');
             if (response.ok) {
                 servicos = await response.json();
-                console.log(servicos[0]);
             } else {
                 console.error('Erro ao buscar dados:', response.statusText);
             }
@@ -208,11 +255,55 @@ input{
         }
     };
 
+    // Função para salvar as alterações, incluindo o upload da imagem
+    // Função para salvar as alterações e enviar a imagem ao backend
+    const salvarServico = async () => {
+    console.log(fileInput.files[0]);
+    
+    
+
+    // Cria um FormData e adiciona o arquivo da imagem e outros dados
+    const formData = new FormData();
+    formData.append('imagem', fileInput.files[0]);
+    formData.append('nome', nomeServico);
+    formData.append('descricao', descricaoServico);
+    formData.append('valor', valorServico);
+    formData.append('id', id);
+
+    try {
+        // Envia a imagem para o backend
+        const response = await fetch('http://localhost:3000/upload-imagem', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (response.ok) {
+            const resultado = await response.json();
+            console.log('Upload bem-sucedido:', resultado);
+
+            // Atualiza a lista de serviços ou faz outra ação após o upload
+            await fetchServicos();  // Recarrega a lista de serviços
+
+            // Você pode exibir a URL da imagem ou outra informação se necessário
+        } else {
+            console.error('Erro ao fazer upload:', response.statusText);
+        }
+    } catch (error) {
+        console.error('Erro na requisição:', error);
+    }
+    fecharPopup();
+};
+
+
+    
+    
+
     // Função para excluir serviço
     const excluirServico = async (id) => {
+        console.log(id)
         try {
             const response = await fetch('http://localhost:3000/servicos_delete', {
-                method: 'POST',
+                method: 'post',
                 headers: {
                     'Content-Type': 'application/json',
                 },
@@ -227,16 +318,22 @@ input{
         } catch (error) {
             console.error('Erro ao excluir:', error);
         }
+        closeConfirmationPopup();
     };
 
     // Função para abrir o popup de edição
     const abrirPopup = (servico) => {
         servicoSelecionado = servico;
+        id=servico.id;
+        console.log(servico.id)
         nomeServico = servico.nome;
+        console.log(nomeServico);
         descricaoServico = servico.descricao;
+        console.log(descricaoServico);
         valorServico = servico.valor;
+        console.log(valorServico);
         fotoServico=servico.path_foto;
-        console.log('pathfoto',path_foto)
+        console.log(fotoServico);
         mostrarPopup = true;
     };  
 
@@ -251,52 +348,14 @@ input{
     };
     
 
-    // Função para editar ou criar o serviço com foto
-    const salvarServico = async () => {
-        const formData = new FormData();
-        formData.append("nome", nomeServico);
-        formData.append("descricao", descricaoServico);
-        formData.append("valor", valorServico);
-        if (fotoServico) {
-            formData.append("foto", fotoServico.files[0]);
-        }
-
-        const url = servicoSelecionado
-            ? 'http://localhost:3000/servicos/editar'
-            : 'http://localhost:3000/servicos/criar';
-
-        try {
-            const response = await fetch(url, {
-                method: 'POST',
-                body: formData,
-            });
-
-            if (response.ok) {
-                const servicoAtualizado = await response.json();
-                if (servicoSelecionado) {
-                    servicos = servicos.map(servico => servico.id === servicoAtualizado.id ? servicoAtualizado : servico);
-                } else {
-                    servicos.push(servicoAtualizado);
-                }
-                fecharPopup();
-            } else {
-                console.error('Erro ao salvar serviço:', response.statusText);
-            }
-        } catch (error) {
-            console.error('Erro ao salvar serviço:', error);
-        }
-    };
-
-    onMount(() => {
-        fetchServicos();
-    });
+    
 
     
     
 
     let uploadIconSrc = "upload_icon.png"; // Ícone padrão de upload
     let path_foto = ""; // URL da imagem carregada do servidor (alterar dinamicamente)
-    let fileInput;
+    
     
     
 
@@ -313,6 +372,27 @@ input{
             reader.readAsDataURL(file); // Lê o arquivo como URL
         }
     }
+    onMount(() => {
+        fetchServicos();
+    });
+
+
+    let showConfirmationPopup = false;
+
+    function openConfirmationPopup(servico) {
+        id=servico.id;
+        showConfirmationPopup = true;
+    }
+
+    function closeConfirmationPopup() {
+        showConfirmationPopup = false;
+    }
+
+    function deleteItem() {
+        console.log('Item excluído!');
+        closeConfirmationPopup();
+    }
+   
 
                     
 </script>
@@ -329,7 +409,7 @@ input{
         <div class="crud_elementos">
             <p>{servico.nome}</p>
             <div class="icons">
-                <button on:click={() => excluirServico(servico.id)}>
+                <button on:click={openConfirmationPopup(servico)}>
                     <img src="img/adm/lata-de-lixo.png" alt="Excluir">
                 </button>
                 <button on:click={() => abrirPopup(servico)}>
@@ -341,6 +421,7 @@ input{
 </div>
 
 {#if mostrarPopup}
+<div class="overlay">
     <div class="popup">
         <div class="popup-content">
             <h3>{servicoSelecionado ? 'Editar Serviço' : 'Criar Serviço'}</h3>
@@ -379,10 +460,7 @@ input{
 
                 </div>
 
-                
 
-                
-                
                 <div class="pop">
                     <button on:click={salvarServico}>
                         {servicoSelecionado ? 'Salvar Alterações' : 'Criar Serviço'}
@@ -392,6 +470,25 @@ input{
                 </div>
                 
             </div>
+        </div>
+    </div>
+
+</div>
+    
+{/if}
+
+
+
+
+
+
+{#if showConfirmationPopup}
+    <div class="overlay" on:click={closeConfirmationPopup}></div>
+    <div class="popup">
+        <p>Tem certeza de que deseja excluir este item?</p>
+        <div class="buttons">
+            <button class="confirm" on:click={excluirServico(id)}>Excluir</button>
+            <button class="cancel" on:click={closeConfirmationPopup}>Cancelar</button>
         </div>
     </div>
 {/if}

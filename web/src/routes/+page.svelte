@@ -3,6 +3,7 @@
     import FormularioAvaliacao from "./componentes/avaliacao/FormularioAvaliacao.svelte";
     import { onMount } from "svelte";   
     import ListaSevicos from "./componentes/adm/ListaSevicos.svelte";
+    import Carrinho from "./componentes/Carrinho.svelte";
 
     // Variável reativa que armazenará os dados dos serviços
     let services = [];
@@ -73,6 +74,7 @@
 </head>
 <body>
     <Nav/>
+    <Carrinho/>
     
     <main id="content">
         <section id="home">
