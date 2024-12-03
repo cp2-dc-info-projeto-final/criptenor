@@ -1,12 +1,13 @@
-<script>
+<script lang="ts">
     import Nav from "./componentes/Nav.svelte";
     import FormularioAvaliacao from "./componentes/avaliacao/FormularioAvaliacao.svelte";
     import { onMount } from "svelte";   
     import ListaSevicos from "./componentes/adm/ListaSevicos.svelte";
-    import Carrinho from "./componentes/Carrinho.svelte";
+    
 
     // Variável reativa que armazenará os dados dos serviços
     let services = [];
+    let  userId = null; // ID do usuário logado
 
     // Função para buscar os serviços do banco de dados via API
     async function fetchServices() {
@@ -25,6 +26,7 @@
     onMount(() => {
         fetchServices();
         fetchAvaliacoes();
+        
     });
 
     // Função auxiliar para renderizar estrelas
@@ -58,6 +60,174 @@
     // Calcula se os botões de navegação devem ser habilitados ou não
     $: canGoBack = currentPage > 0;
     $: canGoForward = (currentPage + 1) * itemsPerPage < feedbacks.length;
+
+
+    function handleServicoAdicionado(event) {
+    const { idServico } = event.detail;
+    console.log('Serviço adicionado ao carrinho com ID:', idServico);
+    // Aqui você pode atualizar o estado ou executar qualquer lógica necessária
+  }
+
+  import { createEventDispatcher } from 'svelte';
+    import Swiper from 'swiper/bundle';
+    import 'swiper/css/bundle';
+    
+    import { goto } from '$app/navigation';
+  
+    let swiper;
+    
+    
+  
+    const dispatch = createEventDispatcher(); // Criando o dispatcher de evento
+  
+    // Função para buscar serviços da API
+
+  
+    // Busca o ID do usuário da sessão
+    onMount(() => {
+        const userData = sessionStorage.getItem('user');
+        if (userData) {
+            try {
+                const parsedUser = JSON.parse(userData);
+                if (parsedUser?.user?.id) {
+                    userId = parsedUser.user.id;
+                } else {
+                    goto('/login');
+                }
+            } catch (error) {
+                console.error('Erro ao fazer parsing dos dados do usuário', error);
+                goto('/login');
+            }
+        } else {
+            goto('/login');
+        }
+  
+        fetchServices(); // Chama a função para buscar os dados da API
+        swiper = new Swiper('.swiper', {
+            direction: 'horizontal',
+            loop: true,
+            slidesPerView: 4,
+            spaceBetween: 20,
+        });
+    });
+  
+    // Função para enviar um serviço para o carrinho
+    async function adicionarAoCarrinho(idServico) {
+        try {
+            const response = await fetch('http://localhost:3000/cadastrar_servico_no_carrinho', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    id_usuario: userId,
+                    id_servico: idServico,
+                }),
+            });
+  
+            fetchCartQuantity(userId);
+  
+            
+  
+            // Emitir o evento para o componente pai
+            dispatch('servicoAdicionado', { idServico });
+        } catch (error) {
+            console.error('Erro ao adicionar serviço ao carrinho:', error);
+        }
+    }
+
+
+  
+    
+    
+    let cartQuantity = 0;
+    let showCart = false;
+    var responseData = [];
+    
+    async function fetchCartQuantity(userId) {
+      try {
+        const response = await fetch(`http://localhost:3000/carrinho/${userId}`);
+        if (!response.ok) {
+          throw new Error('Erro ao buscar a quantidade de itens no carrinho');
+        }
+        
+        // Verifica a resposta
+        responseData = await response.json();
+        responseData = responseData.data;
+        console.log(responseData);
+  
+        // Se 'responseData' contiver a chave 'data' e for um array
+        var tamanho = responseData.length;
+        cartQuantity = tamanho;
+        console.log(tamanho);
+      } catch (error) {
+        console.error('Erro ao buscar dados do carrinho:', error);
+      }
+    }
+  
+    onMount(() => {
+      const userData = sessionStorage.getItem('user');
+      if (userData) {
+        try {
+          const parsedUser = JSON.parse(userData);
+          if (parsedUser?.user?.id) {
+            userId = parsedUser.user.id;
+            fetchCartQuantity(userId);
+          } else {
+            goto('/login');
+          }
+        } catch (error) {
+          goto('/login');
+        }
+      } else {
+        goto('/login');
+      }
+    });
+  
+    // Função para abrir o carrinho
+    function toggleCart() {
+      showCart = !showCart;
+      const cartIcon = document.getElementById('cart-icon-super');
+      if (showCart) {
+        cartIcon.style.display = "none"; // Esconde o ícone quando o carrinho está aberto
+      } else {
+        cartIcon.style.display = "block"; // Exibe o ícone quando o carrinho está fechado
+      }
+    }
+  
+    // Função para fechar o carrinho
+    function closeCart() {
+      const cartIcon = document.getElementById('cart-icon-super');
+      cartIcon.style.display = "block"; // Exibe o ícone quando o carrinho for fechado
+      showCart = false;
+    }
+    
+
+    async function removeFromCart(productId) {
+  try {
+    // Simulando uma chamada para remover o produto do carrinho
+    const response = await fetch('http://localhost:3000/apagar_produto_no_carrinho', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ productId }),
+    });
+
+    if (response.ok) {
+      // Atualize o estado do carrinho (exemplo: remover do array de dados locais)
+      responseData = responseData.filter(item => item.servicos.id !== productId);
+    } else {
+      console.error('Erro ao remover o produto do carrinho.');
+    }
+  } catch (error) {
+    console.error('Erro ao conectar ao servidor:', error);
+  }
+}
+
+  
+  
+  
     
 </script>
 
@@ -74,7 +244,7 @@
 </head>
 <body>
     <Nav/>
-    <Carrinho/>
+    
     
     <main id="content">
         <section id="home">
@@ -128,7 +298,40 @@
         
             <div id="dishes dishes_servicos">
                 
-                <ListaSevicos/>
+                <div class="swiper">
+    <div class="swiper-wrapper">
+      <!-- Itera sobre os serviços e cria um slide para cada serviço -->
+      {#each services as service}
+        <div class="swiper-slide">
+          <div class="card">
+              <div class="card-img">
+                  <div class="img">
+                      <div class="img_servico"> 
+                          <img src={service.path_foto} class="img_servico" alt={service.nome} />
+                      </div>
+                  </div>
+              </div>
+              <div class="card-title">{service.nome}</div>
+              <div class="card-subtitle"> {service.descricao.substring(0, 200)}</div>
+              <hr class="card-divider">
+              <div class="card-footer">
+                  <div class="card-price"><span>R$</span>{service.valor}</div>
+                  <button class="card-btn"  on:click={() => adicionarAoCarrinho(service.id)}>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="m397.78 316h-205.13a15 15 0 0 1 -14.65-11.67l-34.54-150.48a15 15 0 0 1 14.62-18.36h274.27a15 15 0 0 1 14.65 18.36l-34.6 150.48a15 15 0 0 1 -14.62 11.67zm-193.19-30h181.25l27.67-120.48h-236.6z"></path><path d="m222 450a57.48 57.48 0 1 1 57.48-57.48 57.54 57.54 0 0 1 -57.48 57.48zm0-84.95a27.48 27.48 0 1 0 27.48 27.47 27.5 27.5 0 0 0 -27.48-27.47z"></path><path d="m368.42 450a57.48 57.48 0 1 1 57.48-57.48 57.54 57.54 0 0 1 -57.48 57.48zm0-84.95a27.48 27.48 0 1 0 27.48 27.47 27.5 27.5 0 0 0 -27.48-27.47z"></path><path d="m158.08 165.49a15 15 0 0 1 -14.23-10.26l-25.71-77.23h-47.44a15 15 0 1 1 0-30h58.3a15 15 0 0 1 14.23 10.26l29.13 87.49a15 15 0 0 1 -14.23 19.74z"></path></svg>
+                  </button>
+              </div>
+          </div>
+        </div>
+      {/each}
+    </div>
+  
+    <!-- Botões de navegação -->
+    <div class="swiper-button-prev"></div>
+    <div class="swiper-button-next"></div>
+  
+    <!-- Paginação -->
+    <div class="swiper-pagination"></div>
+  </div>
             </div>
         </section>
 
@@ -178,7 +381,7 @@
     </main>
 
     <footer>
-        <img src="src/images/wave.svg" alt="">
+        
 
         <div id="footer_items">
             <span id="copyright">
@@ -200,7 +403,425 @@
             </div>
         </div>
     </footer>
-    <script src="landding/javascript/scrollreveal.js"></script>
+    
     <script src="landding/javascript/script.js"></script>
+    {#if userId && cartQuantity > 0}
+    <div class="rounded-square" id="cart-icon-super" on:click={toggleCart}>
+      <button class="btn-cart" data-quantity={cartQuantity}>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="m397.78 316h-205.13a15 15 0 0 1 -14.65-11.67l-34.54-150.48a15 15 0 0 1 14.62-18.36h274.27a15 15 0 0 1 14.65 18.36l-34.6 150.48a15 15 0 0 1 -14.62 11.67zm-193.19-30h181.25l27.67-120.48h-236.6z"></path><path d="m222 450a57.48 57.48 0 1 1 57.48-57.48 57.54 57.54 0 0 1 -57.48 57.48zm0-84.95a27.48 27.48 0 1 0 27.48 27.47 27.5 27.5 0 0 0 -27.48-27.47z"></path><path d="m368.42 450a57.48 57.48 0 1 1 57.48-57.48 57.54 57.54 0 0 1 -57.48 57.48zm0-84.95a27.48 27.48 0 1 0 27.48 27.47 27.5 27.5 0 0 0 -27.48-27.47z"></path><path d="m158.08 165.49a15 15 0 0 1 -14.23-10.26l-25.71-77.23h-47.44a15 15 0 1 1 0-30h58.3a15 15 0 0 1 14.23 10.26l29.13 87.49a15 15 0 0 1 -14.23 19.53z"></path></svg>
+      </button>
+    </div>
+  {/if}
+  
+  <!-- Overlay do carrinho -->
+  {#if showCart}
+    <div class="cart-overlay visible" on:click={closeCart}>
+      <div class="cart-container">
+        <div class="cart-header">
+          <h2>Carrinho</h2>
+          <button class="close-cart-btn" on:click={closeCart}>&times;</button>
+        </div>
+        <div class="product-list">
+          {#each responseData as item}
+          <div class="product">
+            <span>{item.servicos.nome}</span>
+            <span>R$ {item.servicos.valor}</span>
+            <button class="remove-btn" on:click={() => removeFromCart(item.servicos.id)}>X</button>
+          </div>          
+          {/each}
+        </div>
+        <button class="Btn" on:click={() => goto('')}>Concluir compra</button>
+      </div>
+      
+    </div>
+  {/if}
 </body>
 </html>
+
+
+
+
+  
+<style>
+
+.rounded-square {
+      position: fixed;
+      z-index: 100;
+      top: 25%;
+      right: 20px;
+      width: 60px;
+      height: 60px;
+      border-radius: 15px;
+      background-color: #5691a4;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+    }
+  
+    .btn-cart {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 50px;
+      height: 50px;
+      border-radius: 10px;
+      border: none;
+      background-color: transparent;
+      position: relative;
+    }
+  
+    .btn-cart::after {
+      content: attr(data-quantity);
+      width: fit-content;
+      height: fit-content;
+      position: absolute;
+      font-size: 15px;
+      color: white;
+      font-family: 'Lucida Sans', 'Arial', sans-serif;
+      top: -10px;
+      right: -10px;
+      background-color: #ff0000;
+      border-radius: 50%;
+      padding: 2px 6px;
+    }
+  
+    .cart-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 99;
+      align-items: center;
+      justify-content: center;
+    }
+  
+    .cart-overlay.visible {
+      display: flex;
+    }
+  
+    .cart-container {
+  position: absolute;
+  top: 0;
+  right: 20px;
+  background-color: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 300px;
+  height: 70vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* Garante que o cabeçalho e o botão estejam fixos */
+  z-index: 100;
+  margin-top: 15vh;
+}
+
+.cart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #ccc;
+}
+
+.product-list {
+  flex-grow: 1; /* Preenche o espaço restante */
+  overflow-y: auto; /* Adiciona scroll se os produtos excederem o espaço */
+  margin-top: 10px;
+}
+
+.product {
+  display: flex;
+  justify-content: space-between;
+  margin: 10px 0;
+}
+
+.Btn {
+  margin-top: 10px;
+  width: 100%;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgb(15, 15, 15);
+  border: none;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+  
+    .cart-container h2 {
+      margin-top: 0;
+      font-size: 18px;
+      font-weight: bold;
+    }
+  
+    .cart-container .product {
+      display: flex;
+      justify-content: space-between;
+      margin: 10px 0;
+    }
+  
+    .cart-container .product span {
+      font-size: 14px;
+    }
+  
+    .cart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+  
+    .close-cart-btn {
+      background-color: transparent;
+      border: none;
+      font-size: 20px;
+      color: #333;
+      cursor: pointer;
+    }
+  
+    .close-cart-btn:hover {
+      color: #d9534f;
+    }
+  
+    /* From Uiverse.io by vinodjangid07 */
+    .Btn {
+      width: 100%;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: rgb(15, 15, 15);
+      border: none;
+      color: white;
+      font-weight: 600;
+      gap: 8px;
+      cursor: pointer;
+      box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.103);
+      position: relative;
+      overflow: hidden;
+      transition-duration: .3s;
+    }
+  
+    .svgIcon {
+      width: 16px;
+    }
+  
+    .svgIcon path {
+      fill: white;
+    }
+  
+    .Btn::before {
+      width: 100%;
+      height: 130px;
+      position: absolute;
+      content: "";
+      background-color: white;
+      border-radius: 50%;
+      left: -100%;
+      top: 0;
+      transition-duration: .3s;
+      mix-blend-mode: difference;
+    }
+  
+    .Btn:hover::before {
+      transition-duration: .3s;
+      transform: translate(100%, -50%);
+      border-radius: 0;
+    }
+  
+    .Btn:active {
+      transform: translate(5px, 5px);
+      transition-duration: .3s;
+    }
+  
+    .swiper {
+      width: 90vw;
+      height: 100%;
+    }
+  
+    .swiper-wrapper {
+      display: flex;
+      justify-content: space-between;
+    }
+  
+    .swiper-slide {
+        
+      
+      height: 600px;
+     
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+    }
+  
+    .swiper-slide img {
+      display: block;
+      height: 100%;
+      width: 100%;
+      object-fit: cover;
+    }
+  
+    .swiper-pagination {
+      position: absolute;
+      bottom: 10px;
+      width: 100%;
+      text-align: center;
+    }
+  
+    /* Estilo dos botões de navegação */
+    .swiper-button-next,
+    .swiper-button-prev {
+      color: #000;
+      font-size: 30px;
+      background-color: rgba(255, 255, 255, 0.7);
+      border-radius: 50%;
+      padding: 10px;
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 10;
+    }
+  
+    .swiper-button-next {
+      right: 10px;
+    }
+  
+    .swiper-button-prev {
+      left: 10px;
+    }
+  
+    .swiper-button-next:hover,
+    .swiper-button-prev:hover {
+      background-color: rgba(255, 255, 255, 1);
+    }
+
+    .img_servico{
+        width: 250px;
+        height: 250px;
+        border-radius: 18px;
+    }
+    /* From Uiverse.io by andrew-demchenk0 */ 
+/* before adding the img to the div with the 
+"card-img" class, remove css styles 
+.card-img .img::before and .card-img .img::after,
+then set the desired styles for .card-img. */
+.card {
+  --font-color: #323232;
+  --font-color-sub: #666;
+  --bg-color: #fff;
+  --main-color: #323232;
+  --main-focus: #2d8cf0;
+  width: 275px;
+  height: 500px;
+  background: var(--bg-color);
+  border: 2px solid var(--main-color);
+  box-shadow: 4px 4px var(--main-color);
+  border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 20px;
+  gap: 10px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+.card:last-child {
+  justify-content: flex-end;
+}
+
+.card-img {
+    /* clear and add new css */
+  transition: all 0.5s;
+  display: flex;
+  justify-content: center;
+}
+
+
+
+.card-title {
+  font-size: 20px;
+  font-weight: 500;
+  text-align: center;
+  color: var(--font-color);
+}
+
+.card-subtitle {
+  font-size: 14px;
+  font-weight: 400;
+  height: 22.5%;
+  color: var(--font-color-sub);
+}
+
+.card-divider {
+  width: 100%;
+  
+  border: 1px solid var(--main-color);
+  border-radius: 50px;
+}
+
+.card-footer {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-price {
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--font-color);
+}
+
+.card-price span {
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--font-color-sub);
+}
+
+.card-btn {
+  height: 35px;
+  background: var(--bg-color);
+  border: 2px solid var(--main-color);
+  border-radius: 5px;
+  padding: 0 15px;
+  transition: all 0.3s;
+}
+
+.card-btn svg {
+  width: 100%;
+  height: 100%;
+  fill: var(--main-color);
+  transition: all 0.3s;
+}
+
+.card-img:hover {
+  transform: translateY(-3px);
+}
+
+.card-btn:hover {
+  border: 2px solid var(--main-focus);
+}
+
+.card-btn:hover svg {
+  fill: var(--main-focus);
+}
+
+.card-btn:active {
+  transform: translateY(3px);
+}
+.produtos{
+  height: 70vh;
+}
+
+  </style>
+  
+  
+  
+  

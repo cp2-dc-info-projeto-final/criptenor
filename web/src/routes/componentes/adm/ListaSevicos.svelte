@@ -178,14 +178,18 @@ then set the desired styles for .card-img. */
 
   </style>
   <script>
+    import { createEventDispatcher } from 'svelte';
     import Swiper from 'swiper/bundle';
     import 'swiper/css/bundle';
     import { onMount } from 'svelte';
     import { goto } from '$app/navigation';
-
+  
     let swiper;
     let services = []; // Array de serviços que será preenchido pela API
     let userId = null; // ID do usuário logado
+  
+    const dispatch = createEventDispatcher(); // Criando o dispatcher de evento
+  
     // Função para buscar serviços da API
     async function fetchServices() {
         try {
@@ -198,7 +202,7 @@ then set the desired styles for .card-img. */
             console.error('Erro ao buscar serviços:', error);
         }
     }
-
+  
     // Busca o ID do usuário da sessão
     onMount(() => {
         const userData = sessionStorage.getItem('user');
@@ -217,7 +221,7 @@ then set the desired styles for .card-img. */
         } else {
             goto('/login');
         }
-
+  
         fetchServices(); // Chama a função para buscar os dados da API
         swiper = new Swiper('.swiper', {
             direction: 'horizontal',
@@ -226,7 +230,7 @@ then set the desired styles for .card-img. */
             spaceBetween: 20,
         });
     });
-
+  
     // Função para enviar um serviço para o carrinho
     async function adicionarAoCarrinho(idServico) {
         try {
@@ -240,16 +244,20 @@ then set the desired styles for .card-img. */
                     id_servico: idServico,
                 }),
             });
-
+  
             if (!response.ok) {
                 throw new Error('Erro ao adicionar o serviço ao carrinho');
             }
-
+  
             console.log('Serviço adicionado ao carrinho com sucesso');
+  
+            // Emitir o evento para o componente pai
+            dispatch('servicoAdicionado', { idServico });
         } catch (error) {
             console.error('Erro ao adicionar serviço ao carrinho:', error);
         }
     }
+  
   </script>
   
   <div class="swiper">
@@ -257,9 +265,14 @@ then set the desired styles for .card-img. */
       <!-- Itera sobre os serviços e cria um slide para cada serviço -->
       {#each services as service}
         <div class="swiper-slide">
-          
           <div class="card">
-              <div class="card-img"><div class="img"><div class="img_servico"> <img src={service.path_foto} class="img_servico" alt={service.name} /></div></div></div>
+              <div class="card-img">
+                  <div class="img">
+                      <div class="img_servico"> 
+                          <img src={service.path_foto} class="img_servico" alt={service.nome} />
+                      </div>
+                  </div>
+              </div>
               <div class="card-title">{service.nome}</div>
               <div class="card-subtitle">{service.descricao}</div>
               <hr class="card-divider">
@@ -270,7 +283,6 @@ then set the desired styles for .card-img. */
                   </button>
               </div>
           </div>
-
         </div>
       {/each}
     </div>
@@ -282,6 +294,4 @@ then set the desired styles for .card-img. */
     <!-- Paginação -->
     <div class="swiper-pagination"></div>
   </div>
-  
-
   

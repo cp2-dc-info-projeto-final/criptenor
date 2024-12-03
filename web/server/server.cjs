@@ -3,6 +3,16 @@ const cors = require('cors');
 const bcrypt = require('bcrypt');
 const { createClient } = require('@supabase/supabase-js');
 const session = require('express-session'); // Para gerenciar sessões de usuário
+const multer = require('multer');
+const path = require('path');
+const { v4: uuidv4 } = require('uuid'); // Importa o uuid
+
+
+const upload = multer({
+    limits: { fileSize: 5 * 1024 * 1024 }, // Limite de 5 MB
+    storage: multer.memoryStorage() // Armazenamento na memória
+});
+
 
 // Configurações do Supabase
 const supabaseUrl = 'https://vkjrrppgjzgtastjzgyg.supabase.co';
@@ -182,7 +192,7 @@ app.post('/login', async (req, res) => {
     req.session.userId = user.id; // Definindo o ID do usuário na sessão
     req.session.userEmail = user.email; // Opcional, dependendo do que você quer armazenar na sessão
     req.session.arroba = user.arroba;
-    console.log(req.session.userId);
+    
 
     // Retorna o status de sucesso e as informações do usuário
     return res.status(200).json({
@@ -287,7 +297,7 @@ app.get('/analise-perfil/:param_arroba', async (req, res) => {
     const { data, error } = await supabase.rpc('analise_de_um_perfil', {
       param_arroba: param_arroba // Passando o parâmetro para a função RPC
     });
-    console.log(data);
+    
     // Retornar os dados do perfil como jsonb
     res.status(200).json(data); // Aqui o data[0] será um objeto jsonb
   } catch (err) {
@@ -389,43 +399,7 @@ app.get('/avaliacoes', async (req, res) => {
 
 
 // Rota POST para cadastrar um novo serviço
-app.post('/cadastro_servico', async (req, res) => {
-  const { nome, descricao, avaliacao, valor, path_img } = req.body;
 
-  // Declare avaliacao_padrao fora do bloco condicional
-  let avaliacao_padrao;
-
-  // Verifique se avaliacao é um número
-  if (isNaN(avaliacao)) {
-    avaliacao_padrao = 5; // Valor padrão se avaliacao não for um número
-  } else {
-    avaliacao_padrao = avaliacao; // Use o valor fornecido
-  }
-
-  try {
-    // Inserir o novo serviço na tabela 'servicos'
-    const { data, error } = await supabase
-      .from('servicos')
-      .insert([{ 
-        nome: nome,
-        descricao: descricao,
-        avaliacao: avaliacao_padrao,
-        valor: valor,
-        path_foto: path_img
-      }]);
-
-    if (error) {
-      return res.status(500).json({ error: 'Erro ao cadastrar o serviço' });
-    }
-
-    // Resposta de sucesso (opcional)
-    return res.status(200).json();
-    
-  } catch (err) {
-    console.error('Erro interno do servidor:', err);
-    res.status(500).json({ error: 'Erro interno do servidor' });
-  }
-});
 
 
 // Rota para buscar todos os serviços prestados
@@ -583,125 +557,121 @@ app.post('/alterar_servico', async (req, res) => {
 });
 
 
-const multer = require('multer');
-const path = require('path');
-
-const upload = multer({
-    limits: { fileSize: 5 * 1024 * 1024 }, // Limite de 5 MB
-    storage: multer.memoryStorage() // Armazenamento na memória
-});
 
 
 // Rota de upload de imagem
 app.post('/upload-imagem', upload.single('imagem'), async (req, res) => {
-  
-
   try {
     if (req.file) {
-      console.log(req.file); // Verifique se os dados da imagem estão corretos
+      // Gerar um nome único para a imagem
+      const uniqueName = `${uuidv4()}_${req.file.originalname}`;
+      
+      // Upload da imagem com nome único
+      const { data: uploadData } = await supabase
+        .storage
+        .from('app') // Verifique se é o bucket correto
+        .upload(`servicos/${uniqueName}`, req.file.buffer, {
+          contentType: req.file.mimetype
+        });
+      
+      let path = uploadData.path;
 
-      const { data: uploadData} = await supabase
-          .storage
-          .from('app') // Verifique se é o bucket correto
-          .upload(`servicos/${req.file.originalname}`, req.file.buffer, {
-              contentType: req.file.mimetype
-          });
-          console.log(uploadData.path);
-          let path=uploadData.path;
-          
-          
-          
-          const {data} = await supabase
-          .storage
-          .from('app')
-          .getPublicUrl(path);
-          console.log(data)
-          var linkPublico=data.publicUrl;
-      }
+      const { data } = await supabase
+        .storage
+        .from('app')
+        .getPublicUrl(path);
+      
+      var linkPublico = data.publicUrl;
+
       // Faz o upload da imagem para o Supabase Storage (bucket)
-      
+    }
 
-      
+    // Extrai os dados do corpo da requisição
+    const { id, nome, descricao, valor } = req.body;
 
-      // Extrai os dados do corpo da requisição
-      const { id, nome, descricao, valor } = req.body;
-      console.log(id, nome, descricao, valor, linkPublico)
+    // Verifica se o ID foi passado
 
-      // Verifica se o ID foi passado
-      
+    // Atualiza os dados na tabela 'servicos'
+    const { data: updateData, error: updateError } = await supabase
+      .from('servicos')
+      .update({
+        ...(nome && { nome }), // Atualiza apenas se existir
+        ...(descricao && { descricao }), // Atualiza apenas se existir
+        ...(valor && { valor }), // Atualiza apenas se existir
+        ...(path && { path_foto: linkPublico })
+      })
+      .eq('id', id)
+      .select('*'); // Retorna o registro atualizado
 
-      // Atualiza os dados na tabela 'servicos'
-      const { data: updateData, error: updateError } = await supabase
-          .from('servicos')
-          .update({
-              ...(nome && { nome }), // Atualiza apenas se existir
-              ...(descricao && { descricao }), // Atualiza apenas se existir
-              ...(valor && { valor }), // Atualiza apenas se existir
-              ...(path && { path_foto: linkPublico})
-          })
-          .eq('id', id)
-          .select('*'); // Retorna o registro atualizado
+    if (updateError) {
+      console.error('Erro ao atualizar o serviço:', updateError);
+      return res.status(500).json({ error: 'Erro ao atualizar o serviço.' });
+    }
 
-      if (updateError) {
-          console.error('Erro ao atualizar o serviço:', updateError);
-          return res.status(500).json({ error: 'Erro ao atualizar o serviço.' });
-      }
-
-      res.status(200).json({ message: 'Serviço atualizado com sucesso.', data: updateData });
+    res.status(200).json({ message: 'Serviço atualizado com sucesso.', data: updateData });
   } catch (error) {
-      console.error('Erro interno do servidor:', error);
-      res.status(500).json({ error: 'Erro interno do servidor.' });
+    console.error('Erro interno do servidor:', error);
+    res.status(500).json({ error: 'Erro interno do servidor.' });
   }
 });
 
-
+// Rota para o cadastro de serviço
 app.post('/cadastro_servico', upload.single('imagem'), async (req, res) => {
-  const { nome, descricao, valor } = req.body;
-  console.log('Dados recebidos:', req.body); // Debugging
-  
-  
+  const { nome, descricao, valor, avaliacao } = req.body;
 
   let avaliacao_padrao = isNaN(avaliacao) ? 5 : parseFloat(avaliacao);
 
   try {
-    // Realizando o upload da imagem para o Supabase
+    // Verifica se uma imagem foi enviada
+    if (!req.file) {
+      return res.status(400).json({ error: 'Imagem não fornecida' });
+    }
+
+    // Gerar um nome único para a imagem
+    const uniqueName = `${uuidv4()}_${req.file.originalname}`;
+
+    // Upload da imagem para o Supabase com o nome único
     const { data: uploadData, error: uploadError } = await supabase
       .storage
       .from('app')
-      .upload(`servicos/${req.file.originalname}`, req.file.buffer, {
+      .upload(`servicos/${uniqueName}`, req.file.buffer, {
         contentType: req.file.mimetype
       });
 
-   
+    if (uploadError) {
+      console.error('Erro no upload da imagem:', uploadError);
+      return res.status(500).json({ error: 'Erro ao fazer upload da imagem' });
+    }
+
     // Obtendo o link público da imagem
-    const { data } = await supabase
+    const { data: publicData } = supabase
       .storage
       .from('app')
       .getPublicUrl(uploadData.path);
 
-    const linkPublico = data.publicUrl;
+    const linkPublico = publicData.publicUrl;
 
-    // Inserir o novo serviço na tabela 'servicos'
+    // Inserir os dados no banco de dados Supabase
     const { data: serviceData, error: insertError } = await supabase
       .from('servicos')
       .insert([{
         nome,
         descricao,
+        valor: parseFloat(valor),
         avaliacao: avaliacao_padrao,
-        valor,
         path_foto: linkPublico
       }]);
 
- 
+    if (insertError) {
+      console.error('Erro ao inserir serviço:', insertError);
+      return res.status(500).json({ error: 'Erro ao inserir serviço no banco de dados' });
+    }
 
-    return res.status(200).json({
-      message: 'Serviço cadastrado com sucesso.',
-      data: serviceData
-    });
-
-  } catch (err) {
-    console.error('Erro interno do servidor:', err);
-    return res.status(500).json({ error: 'Erro interno do servidor' });
+    // Retornar sucesso
+    res.status(201).json({ message: 'Serviço cadastrado com sucesso', data: serviceData });
+  } catch (error) {
+    console.error('Erro no processamento:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
 
@@ -718,7 +688,7 @@ app.get('/carrinho/:userId', async (req, res) => {
  
 
     
-    console.log(data)
+    
     res.json({ data});
   } catch (err) {
     console.error(err);
@@ -750,6 +720,58 @@ app.post('/cadastrar_servico_no_carrinho', async (req, res) => {
     res.status(500).json({ error: 'Erro ao cadastrar serviço no carrinho' });
   }
 });
+
+// Rota para deletar um produto usando o método POST
+// Rota para apagar um produto do carrinho usando o método POST
+app.post('/apagar_produto_no_carrinho', async (req, res) => {
+  const { id_session, id_produto } = req.body;
+
+  // Validação básica
+  if (!id_session || !id_produto) {
+    return res.status(400).json({ error: 'Os parâmetros id_session e id_produto são obrigatórios.' });
+  }
+
+  try {
+    // Passo 1: Obter o usuário pelo id_session
+    const { data: usuarioData, error: usuarioError } = await supabase
+      .from('usuario')
+      .select('id')
+      .eq('session_id', id_session)
+      .single();
+
+      console.log(usuarioData.id);
+
+    const usuarioId = usuarioData.id;
+
+    // Passo 2: Verificar se o produto está no carrinho do usuário
+    const { data: carrinhoData, error: carrinhoError } = await supabase
+      .from('carrinho')
+      .select('id')
+      .eq('usuario_id', usuarioId)
+      .eq('produto_id', id_produto)
+      .single();
+
+    if (carrinhoError || !carrinhoData) {
+      return res.status(404).json({ error: 'Produto não encontrado no carrinho do usuário.' });
+    }
+
+    // Passo 3: Remover o produto do carrinho
+    const { error: deleteError } = await supabase
+      .from('carrinho')
+      .delete()
+      .eq('id', carrinhoData.id);
+
+    if (deleteError) {
+      return res.status(500).json({ error: 'Erro ao apagar o produto do carrinho.', details: deleteError.message });
+    }
+
+    return res.status(200).json({ message: 'Produto apagado do carrinho com sucesso.' });
+  } catch (err) {
+    return res.status(500).json({ error: 'Erro inesperado.', details: err.message });
+  }
+});
+
+
 
 
 
@@ -796,6 +818,8 @@ app.post('/alterar_usuario/:id', async (req, res) => {
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
+
+
 
 
 
