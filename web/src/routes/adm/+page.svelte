@@ -1,6 +1,7 @@
 <link rel="stylesheet" href="landding/styles/styles.css">
 
 <style>
+
     .body {
         display: flex;
         height: 100vh;
@@ -12,7 +13,7 @@
         display: flex;
     }
     .menu_adm {
-        background-color: blueviolet;
+        background-color:var(--color-primary-1);
         width: 25%;
         min-height: 75vh;
         
@@ -36,7 +37,7 @@
         background-color: lightgray;
     }
     .menu_item.active {
-        background-color: darkviolet;
+        background-color: var(--color-primary-6);
         color: white;
     }
     .titulo {

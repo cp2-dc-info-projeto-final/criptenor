@@ -1,35 +1,59 @@
 <script>
-    import { onMount } from 'svelte';
-    import { goto } from '$app/navigation';
-  
-    let userId = null;
-    let isAdmin = false;
-  
-    onMount(() => {
-      const userData = sessionStorage.getItem('user');
-  
-      if (userData) {
-        try {
-          const parsedUser = JSON.parse(userData);
-          if (parsedUser?.user?.id) {
-            userId = parsedUser.user.id;
-            // Verifica se o ID do usuário é igual a 1
-            if (userId === 1) {
-              isAdmin = true; // O usuário é um administrador
-            } else {
-              // Se não for administrador, redireciona para a raiz
-              goto('/');
-            }
+  import { onMount } from 'svelte';
+  import { goto } from '$app/navigation';
+
+  let isAdmin = false;
+
+  async function checkAdminAccess(token) {
+    try {
+      console.log('Token enviado:', token);
+
+      const response = await fetch('http://localhost:3000/conferir-credencial-adm', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ access_token: token }),
+      });
+
+      const data = await response.json();
+      console.log('Resposta do servidor:', data);
+
+      if (response.ok && data?.adm === true) {
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Erro ao verificar o access_token:', error);
+      return false;
+    }
+  }
+
+  onMount(async () => {
+    const token = localStorage.getItem('access_token');
+
+    if (token) {
+      try {
+        if (token) {
+          const isAdminUser = await checkAdminAccess(token);
+
+          if (isAdminUser) {
+            isAdmin = true;
+          } else {
+            console.log('Acesso negado. Redirecionando para login.');
+            goto('/login');
           }
-        } catch (error) {
-          console.error('Erro ao fazer parsing dos dados do usuário', error);
+        } else {
+          console.log('Token de acesso não encontrado. Redirecionando para login.');
+          goto('/login');
         }
-      } else {
-        // Se não estiver logado, redireciona para a página de login
+      } catch (error) {
+        console.error('Erro ao processar os dados do usuário:', error);
         goto('/login');
       }
-    });
-  </script>
-  
-
-  
+    } else {
+      console.log('Nenhum dado de usuário encontrado no sessionStorage. Redirecionando para login.');
+      goto('/login');
+    }
+  });
+</script>

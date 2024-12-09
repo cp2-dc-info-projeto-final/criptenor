@@ -1,31 +1,63 @@
 <script>
-  import { onMount } from 'svelte'; // Certifique-se de importar onMount corretamente
-  import { goto } from '$app/navigation'; // Importa o goto para redirecionamento
+  import { onMount } from 'svelte';
+  import { goto } from '$app/navigation';
 
   let userId = null;
 
-  // Executa assim que o componente é montado
-  onMount(() => {
-    const userData = sessionStorage.getItem('user');
+  // Função para verificar o token e obter dados do usuário
+  async function checkAccessToken() {
+    let token=localStorage.getItem('access_token');
+    try {
+      const response = await fetch('http://localhost:3000/conferir-credencial-adm', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ access_token: token }),
+      });
 
-    if (userData) {
+      if (response.ok) {
+        const data = await response.json();
+        console.log(data.user_id, "Usuário credenciado a partir desse ID");
+        return data; // Retorna todos os dados do usuário
+      } else {
+        console.error('Token inválido ou erro na verificação.');
+        return null;
+      }
+    } catch (error) {
+      console.error('Erro ao verificar o access_token:', error);
+      return null;
+    }
+  }
+
+  onMount(async () => {
+    
+    
+
+    if (true) {
       try {
-        const parsedUser = JSON.parse(userData);
-        if (parsedUser?.user?.id) {
-          userId = parsedUser.user.id;
-          console.log('Usuário autenticado com ID:', parsedUser.user.id);
+        const userData = await checkAccessToken();
+
+        if (userData) {
+          userId = userData.user_id;
+          console.log('Usuário autenticado com ID:', userId, userData.email_confirmado);
+
+          // Verifica se o e-mail foi confirmado
+          if (userData.email_confirmado == false) {
+            console.log('E-mail não confirmado. Redirecionando para confirmar_email.');
+            goto('/confirm_email');
+          }
         } else {
-          console.log('ID do usuário não encontrado');
-          goto('/login'); // Redireciona para /login se o ID não for encontrado
+          console.log('Token inválido. Redirecionando para login.');
+          goto('/login');
         }
       } catch (error) {
-        console.error('Erro ao fazer parsing dos dados do usuário', error);
-        goto('/login'); // Redireciona para /login em caso de erro
+        console.error('Erro ao processar os dados do usuário:', error);
+        goto('/login');
       }
     } else {
-      console.log('Nenhum dado de usuário encontrado no sessionStorage');
-      goto('/login'); // Redireciona para /login se não houver dados
+      console.log('Nenhum token encontrado. Redirecionando para login.');
+      goto('/login');
     }
   });
 </script>
-

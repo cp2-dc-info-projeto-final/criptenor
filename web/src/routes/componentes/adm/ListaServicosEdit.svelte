@@ -312,6 +312,7 @@ input{
             if (response.ok) {
                 servicos = servicos.filter(servico => servico.id !== id);
                 fecharPopup();
+                fetchServicos();
             } else {
                 console.error('Erro ao excluir:', response.statusText);
             }

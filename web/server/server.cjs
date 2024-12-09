@@ -32,43 +32,327 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Configuração da sessão
-app.use(session({
-  secret: 'segredo_super_secreto', // Substitua por uma string forte e segura
-  resave: false,
-  saveUninitialized: false,
-  cookie: { secure: false } // Mude para 'true' em produção, se usar HTTPS
-}));
 
-// Rota para obter a sessão
-app.get('/session', (req, res) => {
-  if (req.session.userId) {
-    return res.status(200).json({
-      loggedIn: true,
-      userId: req.session.userId,
-      userEmail: req.session.userEmail,
-      userArroba: req.session.arroba
-    });
-  } else {
-    return res.status(200).json({ loggedIn: false });
+
+// Nova lógica de login
+
+
+//Email
+const nodemailer = require('nodemailer');
+
+// Configuração do Nodemailer
+const transporter = nodemailer.createTransport({
+  host: 'smtp.gmail.com',
+  port:465,
+  secure: true,
+  service: 'gmail', // Você pode trocar o serviço conforme necessário
+  auth: {
+    user: 'criptenor@gmail.com', // Seu e-mail
+    pass: 'bbsl cezk hmae guai' // Senha ou App Password
   }
 });
-// Rota para logout
-app.post('/logout', (req, res) => {
-  // Verifica se o usuário está logado
-  if (req.session.userId) {
-    // Destrói a sessão do usuário
-    req.session.destroy(err => {
-      if (err) {
-        return res.status(500).json({ error: 'Erro ao realizar logout' });
+
+
+
+const crypto = require('crypto'); // Para gerar o hash seguro
+
+/**
+ * Método de login via POST.
+ * Recebe email e senha no corpo da requisição, gera um access_token e o retorna.
+ */
+app.post('/login', async (req, res) => {
+    const { email, senha } = req.body;
+
+    if (!email || !senha) {
+        return res.status(400).json({ error: 'Email e senha são obrigatórios.' });
+    }
+    console.log(email);
+    console.log(senha);
+
+    try {
+        // Buscar o usuário no banco de dados
+        const { data: usuarios, error } = await supabase
+            .from('usuario_apk')
+            .select('id, senha')
+            .eq('usuario', email)
+            .limit(1);
+
+        console.log(usuarios)
+        const usuario = usuarios[0];
+        
+
+        // Verificar a senha
+        const senhaValida = await bcrypt.compare(senha, usuario.senha);
+        if (!senhaValida) {
+            return res.status(401).json({ error: 'Senha inválida.' });
+        }
+
+        // Gerar o access_token
+        const accessToken = crypto.randomBytes(32).toString('hex');
+
+        // Atualizar o access_token no banco de dados
+        const { error: updateError } = await supabase
+            .from('usuario_apk')
+            .update({ access_token: accessToken })
+            .eq('id', usuario.id);
+
+
+
+        // Retornar o access_token
+        return res.status(200).json({ access_token: accessToken });
+    } catch (err) {
+        console.error('Erro inesperado no login:', err);
+        return res.status(500).json({ error: 'Erro interno no servidor.' });
+    }
+});
+
+app.post('/logout', async (req, res) => {
+  const { access_token } = req.body;
+
+  if (!access_token) {
+      return res.status(400).json({ error: 'Access token é obrigatório.' });
+  }
+
+  try {
+      // Remover o access_token do banco de dados
+      const { error } = await supabase
+          .from('usuario_apk')
+          .update({ access_token: null })
+          .eq('access_token', access_token);
+
+      if (error) {
+          return res.status(500).json({ error: 'Erro ao remover o access_token.' });
       }
 
-      // Redireciona ou envia resposta de sucesso
-      return res.status(200).json({ message: 'Logout realizado com sucesso' });
-    });
-  } else {
-    return res.status(400).json({ error: 'Usuário não está logado' });
+      // Confirmar logout
+      return res.status(200).json({ message: 'Logout realizado com sucesso.' });
+  } catch (err) {
+      console.error('Erro inesperado no logout:', err);
+      return res.status(500).json({ error: 'Erro interno no servidor.' });
   }
 });
+
+app.post('/enviar-email-de-confirmacao', async (req, res) => {
+  const { access_token } = req.body;
+
+  try {
+    // Verificar se o usuário existe no banco de dados
+    const { data: usuarios, error } = await supabase
+      .from('usuario_apk')
+      .select('id, usuario, email_confirmado')
+      .eq('access_token', access_token)
+      .limit(1);
+
+   
+    if (usuarios[0].email_confirmado == true){
+      return res.status(200).json({ message: 'E-mail de confirmação enviado com sucesso.' });
+    }
+
+    const usuario = usuarios[0];
+    const email = usuario.usuario;
+
+    // Gerar o código de confirmação de 4 dígitos
+    const codigoConfirmacao = Math.floor(1000 + Math.random() * 9000).toString();
+
+    // Atualizar o código de confirmação no banco de dados
+    const { error: updateError } = await supabase
+      .from('usuario_apk')
+      .update({ codigo_confirmacao: codigoConfirmacao })
+      .eq('id', usuario.id);
+
+    
+    // Template HTML com interpolação
+    const html = `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Código de Confirmação</title>
+          <style>
+              body {
+                  font-family: Arial, sans-serif;
+                  background-color: #f9f9f9;
+                  margin: 0;
+                  padding: 0;
+                  color: #333;
+              }
+              .email-container {
+                  max-width: 600px;
+                  margin: 20px auto;
+                  background-color: #ffffff;
+                  border-radius: 10px;
+                  overflow: hidden;
+                  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+              }
+              .header {
+                  background-color: #4CAF50;
+                  color: #ffffff;
+                  text-align: center;
+                  padding: 20px;
+              }
+              .header img {
+                  max-width: 150px;
+                  margin-bottom: 10px;
+              }
+              .header h1 {
+                  margin: 0;
+                  font-size: 24px;
+              }
+              .content {
+                  padding: 20px;
+              }
+              .content h2 {
+                  color: #4CAF50;
+                  font-size: 20px;
+              }
+              .content p {
+                  font-size: 16px;
+                  line-height: 1.6;
+              }
+              .code {
+                  font-size: 24px;
+                  font-weight: bold;
+                  text-align: center;
+                  margin: 20px 0;
+                  padding: 10px;
+                  background-color: #f4f4f4;
+                  border-radius: 5px;
+                  border: 1px dashed #4CAF50;
+                  color: #4CAF50;
+              }
+              .footer {
+                  background-color: #f4f4f4;
+                  text-align: center;
+                  padding: 10px;
+                  font-size: 14px;
+                  color: #666;
+              }
+              .footer a {
+                  color: #4CAF50;
+                  text-decoration: none;
+              }
+          </style>
+      </head>
+      <body>
+          <div class="email-container">
+              <div class="header">
+                  <img src="https://vkjrrppgjzgtastjzgyg.supabase.co/storage/v1/object/public/app/criptenor.png?t=2024-12-09T03%3A29%3A40.991Z" alt="CRIPTENOR Logo">
+                  <h1>CRIPTENOR</h1>
+              </div>
+              <div class="content">
+                  <h2>Olá, ${email}!</h2>
+                  <p>Esperamos que esteja tudo bem com você. Estamos enviando o seu código de confirmação para garantir a segurança da sua conta. Por favor, não compartilhe este código com ninguém.</p>
+                  <div class="code">${codigoConfirmacao}</div>
+                  <p>Se você não solicitou este código, entre em contato com nossa equipe de suporte imediatamente.</p>
+                  <p>Atenciosamente,<br>Equipe CRIPTENOR</p>
+              </div>
+              <div class="footer">
+                  <p>Esta mensagem foi enviada por CRIPTENOR. Para dúvidas ou suporte, acesse nosso <a href="https://criptenor.com">site oficial</a>.</p>
+              </div>
+          </div>
+      </body>
+      </html>
+    `;
+
+    // Configurar o e-mail
+    const mailOptions = {
+      from: 'criptenor@gmail.com',
+      to: email,
+      subject: 'Código de Confirmação',
+      html: html, // Template HTML
+    };
+
+    // Enviar o e-mail
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.error('Erro ao enviar o e-mail:', error);
+        return res.status(500).json({ error: 'Erro ao enviar o e-mail.' });
+      }
+
+      console.log('E-mail enviado:', info.response);
+      return res.status(200).json({ message: 'E-mail de confirmação enviado com sucesso.' });
+    });
+  } catch (err) {
+    console.error('Erro inesperado ao enviar o e-mail de confirmação:', err);
+    return res.status(500).json({ error: 'Erro interno no servidor.' });
+  }
+});
+
+
+app.post('/confirmar-pin', async (req, res) => {
+  const { access_token, pin } = req.body;
+
+  try {
+    // Verificar se o access_token e o pin estão corretos
+    const { data: usuario, error: fetchError } = await supabase
+      .from('usuario_apk')
+      .select('id, codigo_confirmacao, email_confirmado')
+      .eq('access_token', access_token)
+      .limit(1)
+      .single();
+      console.log(usuario.codigo_confirmacao, pin)
+
+
+    // Verificar se o PIN corresponde
+    if (usuario.codigo_confirmacao != pin) {
+      console.log('PIN incorreto.');
+      return res.status(401).json({ error: 'PIN incorreto.' });
+    }
+
+    // Atualizar o campo email_confirmado
+    const { data:dataUsuario, error: updateError } = await supabase
+      .from('usuario_apk')
+      .update({ email_confirmado: true })
+      .eq('id', usuario.id);
+      console.log(dataUsuario);
+
+
+    
+    console.log('E-mail confirmado com sucesso para o usuário:', usuario.id);
+    return res.status(200).json({ message: 'E-mail confirmado com sucesso!' });
+  } catch (err) {
+    
+    return res.status(500).json({ error: 'Erro interno no servidor.' });
+  }
+});
+
+
+
+
+app.post('/conferir-credencial-adm', async (req, res) => {
+  const { access_token } = req.body;
+  console.log('Token recebido no servidor:', access_token);
+
+  try {
+    const { data: usuarios, error } = await supabase
+      .from('usuario_apk')
+      .select('id, adm, email_confirmado')
+      .eq('access_token', access_token)
+      .eq('adm', true)
+      .limit(1);
+
+    if (!usuarios || usuarios.length === 0) {
+      return res.status(404).json({ error: 'Usuário não encontrado ou não é administrador.' });
+    }
+
+    const usuario = usuarios[0];
+
+    return res.status(200).json({ 
+      message: 'Access token válido e usuário é administrador.', 
+      user_id: usuario.id,
+      adm: usuario.adm,
+      email_confirmado:usuario.email_confirmado
+    });
+  } catch (err) {
+    console.error('Erro inesperado ao conferir credencial:', err);
+    return res.status(500).json({ error: 'Erro interno no servidor.' });
+  }
+});
+
+
+
+
 
 // Rota POST para cadastrar um novo usuário
 app.post('/cadastro_usuario', async (req, res) => {
@@ -161,50 +445,7 @@ app.post('/inserir_avaliacao', async (req, res) => {
 // Configuração da sessão
 
 
-app.post('/login', async (req, res) => {
-  const { email, senha } = req.body;
 
-  // Verifica se os campos obrigatórios estão presentes
-  if (!email || !senha) {
-    return res.status(400).json({ error: 'Email e senha são obrigatórios' });
-  }
-
-  try {
-    // Buscar o usuário pelo email no banco de dados
-    const { data: user, error } = await supabase
-      .from('usuario_apk')
-      .select('*')
-      .eq('usuario', email)
-      .single(); // Usamos single() porque esperamos que apenas um usuário seja retornado
-
-    if (error || !user) {
-      return res.status(400).json({ error: 'Email ou senha incorretos' });
-    }
-
-    // Comparar a senha fornecida com a senha armazenada no banco de dados (hash)
-    const isPasswordValid = await bcrypt.compare(senha, user.senha);
-
-    if (!isPasswordValid) {
-      return res.status(400).json({ error: 'Email ou senha incorretos' });
-    }
-
-    // Login bem-sucedido, definir variáveis de sessão
-    req.session.userId = user.id; // Definindo o ID do usuário na sessão
-    req.session.userEmail = user.email; // Opcional, dependendo do que você quer armazenar na sessão
-    req.session.arroba = user.arroba;
-    
-
-    // Retorna o status de sucesso e as informações do usuário
-    return res.status(200).json({
-      message: 'Login realizado com sucesso',
-      user: { id: user.id, email: user.email } // Opcional: Retorne mais informações do usuário, se necessário
-    });
-
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: 'Erro interno do servidor' });
-  }
-});
 
 
 
@@ -251,37 +492,6 @@ app.get('/usuario/:arroba', async (req, res) => {
   }
 });
 
-// Rota para buscar um usuário específico por ID
-// Rota para buscar o usuário interno pela sessão
-app.get('/usuario_interno', async (req, res) => {
-  // Verifica se o usuário está logado
-  if (!req.session.userId) {
-    return res.status(401).json({ error: 'Usuário não autenticado' });
-  }
-
-  const userId = req.session.userId; // Obtém o ID do usuário da sessão
-  
-  try {
-    const { data, error } = await supabase
-      .from('usuario_apk') // Altere para o nome correto da sua tabela se necessário
-      .select('*')
-      .eq('id', userId) // Usando o ID da sessão
-      .single(); // Usamos single() porque esperamos apenas um usuário
-
-    if (error) {
-      return res.status(500).json({ error: 'Erro ao buscar o usuário' });
-    }
-
-    if (!data) {
-      return res.status(404).json({ error: 'Usuário não encontrado' });
-    }
-
-    res.status(200).json(data); // Retornar os dados do usuário
-  } catch (err) {
-    res.status(500).json({ error: 'Erro interno do servidor' });
-  }
-});
-
 
 // Rota para analisar um perfil por arroba
 app.get('/analise-perfil/:param_arroba', async (req, res) => {
@@ -307,19 +517,19 @@ app.get('/analise-perfil/:param_arroba', async (req, res) => {
 });
 
 // Endpoint para buscar arroba pelo ID
-app.get('/usuario-apk/:id', async (req, res) => {
-  const { id } = req.params;
+app.get('/usuario-apk/:access_token', async (req, res) => {
+  const { access_token } = req.params;
 
-  if (!id) {
-      return res.status(400).json({ error: 'Parâmetro ID é obrigatório' });
+  if (!access_token) {
+      return res.status(400).json({ error: 'Parâmetro access_token é obrigatório' });
   }
 
   try {
-      // Consulta na tabela usuario_apk para obter o arroba pelo ID
+      // Consulta na tabela usuario_apk para obter o arroba pelo access_token
       const { data, error } = await supabase
           .from('usuario_apk')
           .select('arroba')
-          .eq('id', id)
+          .eq('access_token', access_token)
           .single(); // Usando .single() para obter um único registro
 
       if (error || !data) {
@@ -334,27 +544,27 @@ app.get('/usuario-apk/:id', async (req, res) => {
   }
 });
 
-// Rota para analisar perfil por ID do usuário
-app.get('/analise-perfil-por-id/:id', async (req, res) => {
-  const { id } = req.params;
 
-  if (!id) {
-    return res.status(400).json({ error: 'Parâmetro ID é obrigatório' });
+// Rota para analisar perfil por ID do usuário
+app.get('/analise-perfil-por-token', async (req, res) => {
+  const { access_token } = req.query; // Obtendo o token do query parameter
+
+  if (!access_token) {
+    return res.status(400).json({ error: 'O parâmetro access_token é obrigatório' });
   }
 
   try {
-    // Consulta na tabela usuario_apk para obter o arroba pelo ID
+    // Consulta na tabela usuario_apk para obter o arroba pelo access_token
     const { data: user, error: userError } = await supabase
       .from('usuario_apk')
       .select('arroba')
-      .eq('id', id)
+      .eq('access_token', access_token)
       .single(); // Usando .single() para obter um único registro
 
-    if (userError || !user) {
-      return res.status(404).json({ error: 'Usuário não encontrado' });
-    }
+    
 
     const arroba = user.arroba;
+    console.log(user);
 
     // Chamar a função RPC 'analise_de_um_perfil' no Supabase
     const { data: analiseData, error: analiseError } = await supabase.rpc('analise_de_um_perfil', {
@@ -373,6 +583,7 @@ app.get('/analise-perfil-por-id/:id', async (req, res) => {
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
+
 
 
 // Rota GET para obter todas as avaliações
@@ -408,7 +619,8 @@ app.get('/servicos', async (req, res) => {
     // Consulta todos os serviços na tabela 'servicos'
     const { data, error } = await supabase
       .from('servicos') // Certifique-se de que o nome da tabela está correto
-      .select('*');
+      .select('*')
+      .neq('id', 1);
 
     if (error) {
       return res.status(500).json({ error: 'Erro ao buscar serviços' });
@@ -675,36 +887,95 @@ app.post('/cadastro_servico', upload.single('imagem'), async (req, res) => {
   }
 });
 
-app.get('/carrinho/:userId', async (req, res) => {
-  const { userId } = req.params;
+app.get('/carrinho', async (req, res) => {
+  const { access_token } = req.headers;
+
+  if (!access_token) {
+    return res.status(400).send('Access token é obrigatório');
+  }
 
   try {
-    // Buscando os itens do carrinho com detalhes do serviço associado
-    const { data, error } = await supabase
+    // Buscar o usuário pelo access_token na tabela usuario_apk
+    const { data: user, error: userError } = await supabase
+      .from('usuario_apk')
+      .select('id')
+      .eq('access_token', access_token)
+      .single();
+
+    if (userError || !user) {
+      return res.status(404).send('Usuário não encontrado');
+    }
+
+    const userId = user.id;
+
+    // Buscar os itens do carrinho associados ao usuário
+    const { data: carrinho, error: carrinhoError } = await supabase
       .from('carrinho')
-      .select('id_servico, servicos(nome, descricao, valor)')  // Aqui estamos trazendo os detalhes do serviço
-      .eq('id_usuario', userId); // Garantindo que estamos pegando os itens do carrinho do usuário correto
+      .select('id_servico, servicos(nome, descricao, valor)')
+      .eq('id_usuario', userId);
 
- 
+    if (carrinhoError) {
+      return res.status(500).send('Erro ao buscar itens do carrinho');
+    }
 
+    // Agrupar os serviços e somar as quantidades
+    const carrinhoAgrupado = carrinho.reduce((acc, item) => {
+      const { id_servico, servicos } = item;
+
+      if (acc[id_servico]) {
+        acc[id_servico].quantidade += 1;
+      } else {
+        acc[id_servico] = {
+          id_servico,
+          nome: servicos.nome,
+          descricao: servicos.descricao,
+          valor: servicos.valor,
+          quantidade: 1
+        };
+      }
+
+      return acc;
+    }, {});
+
+    const carrinhoFinal = Object.values(carrinhoAgrupado);
+
+    // Calcular o valor total do carrinho
+    const valorTotal = carrinhoFinal.reduce((total, item) => {
+      return total + item.valor * item.quantidade;
+    }, 0);
+
+    res.json({
+      data: carrinhoFinal,
+      valorTotal: valorTotal.toLocaleString('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      })
+    });
     
-    
-    res.json({ data});
   } catch (err) {
     console.error(err);
-    res.status(500).send('Erro ao buscar itens do carrinho');
+    res.status(500).send('Erro ao processar a solicitação');
   }
 });
 
 
 
+
+
+
 app.post('/cadastrar_servico_no_carrinho', async (req, res) => {
-  const { id_usuario, id_servico } = req.body;
+  const { access_token, id_servico } = req.body;
+  const { data: usuarioData, error: usuarioError } = await supabase
+      .from('usuario_apk')
+      .select('id')
+      .eq('access_token', access_token)
+      .single();
 
-  if (!id_usuario || !id_servico) {
-    return res.status(400).json({ error: 'id_usuario e id_servico são obrigatórios' });
-  }
+      console.log(usuarioData);
 
+    const id_usuario = usuarioData.id;
+
+ 
   try {
     const { data, error } = await supabase
       .from('carrinho') // Substitua pelo nome real da sua tabela de carrinho
@@ -726,17 +997,13 @@ app.post('/cadastrar_servico_no_carrinho', async (req, res) => {
 app.post('/apagar_produto_no_carrinho', async (req, res) => {
   const { id_session, id_produto } = req.body;
 
-  // Validação básica
-  if (!id_session || !id_produto) {
-    return res.status(400).json({ error: 'Os parâmetros id_session e id_produto são obrigatórios.' });
-  }
 
   try {
     // Passo 1: Obter o usuário pelo id_session
     const { data: usuarioData, error: usuarioError } = await supabase
-      .from('usuario')
+      .from('usuario_apk')
       .select('id')
-      .eq('session_id', id_session)
+      .eq('access_token', id_session)
       .single();
 
       console.log(usuarioData.id);
@@ -747,29 +1014,176 @@ app.post('/apagar_produto_no_carrinho', async (req, res) => {
     const { data: carrinhoData, error: carrinhoError } = await supabase
       .from('carrinho')
       .select('id')
-      .eq('usuario_id', usuarioId)
-      .eq('produto_id', id_produto)
-      .single();
+      .eq('id_usuario', usuarioId)
+      .eq('id_servico', id_produto)
+      
+    console.log(carrinhoData[0].id);
 
-    if (carrinhoError || !carrinhoData) {
-      return res.status(404).json({ error: 'Produto não encontrado no carrinho do usuário.' });
-    }
 
     // Passo 3: Remover o produto do carrinho
     const { error: deleteError } = await supabase
       .from('carrinho')
       .delete()
-      .eq('id', carrinhoData.id);
+      .eq('id', carrinhoData[0].id);
 
-    if (deleteError) {
-      return res.status(500).json({ error: 'Erro ao apagar o produto do carrinho.', details: deleteError.message });
-    }
+ 
 
     return res.status(200).json({ message: 'Produto apagado do carrinho com sucesso.' });
   } catch (err) {
-    return res.status(500).json({ error: 'Erro inesperado.', details: err.message });
+    console.log(err)
   }
 });
+
+
+
+// Rota para adicionar compras do carrinho ao histórico de compras
+// Rota para adicionar compras do carrinho ao histórico de compras
+app.post('/comprar', async (req, res) => {
+  const { access_token } = req.body;
+
+  if (!access_token) {
+    return res.status(400).send('Access token é obrigatório');
+  }
+
+  try {
+    // 1. Buscar o usuário pelo access_token
+    const { data: user, error: userError } = await supabase
+      .from('usuario_apk')
+      .select('id')
+      .eq('access_token', access_token)
+      .single();
+
+    if (userError || !user) {
+      return res.status(404).send('Usuário não encontrado');
+    }
+
+    const userId = user.id;
+
+    // 2. Buscar os itens do carrinho associados ao usuário
+    const { data: carrinho, error: carrinhoError } = await supabase
+      .from('carrinho')
+      .select('id_servico')
+      .eq('id_usuario', userId);
+
+    if (carrinhoError) {
+      return res.status(500).send('Erro ao buscar itens do carrinho');
+    }
+
+    if (!carrinho || carrinho.length === 0) {
+      return res.status(404).send('Nenhum serviço encontrado no carrinho');
+    }
+
+    // 3. Adicionar cada serviço individualmente à tabela de compras
+    for (const item of carrinho) {
+      const { id_servico } = item;
+
+      const { error: compraError } = await supabase
+        .from('compra')
+        .insert([
+          {
+            id_usuario: userId,
+            id_servico,
+            utilizada:false
+          }
+        ]);
+
+      if (compraError) {
+        console.error('Erro ao adicionar à tabela compra:', compraError);
+        return res.status(500).send('Erro ao adicionar o serviço à compra');
+      }
+    }
+
+    // 4. Limpar os serviços do carrinho após adicionar à compra
+    const idsServico = carrinho.map(servico => servico.id_servico);
+    const { error: deleteError } = await supabase
+      .from('carrinho')
+      .delete()
+      .in('id_servico', idsServico)
+      .eq('id_usuario', userId);
+
+    if (deleteError) {
+      console.error('Erro ao limpar o carrinho:', deleteError);
+      return res.status(500).send('Erro ao limpar o carrinho após a compra');
+    }
+
+    res.status(200).json({
+      message: 'Compra realizada com sucesso'
+    });
+
+  } catch (err) {
+    console.error('Erro ao adicionar compra:', err);
+    res.status(500).send('Erro ao processar a solicitação');
+  }
+});
+
+app.post('/total_credito', async (req, res) => {
+  const { access_token } = req.body;
+
+  if (!access_token) {
+    return res.status(400).send('Access token é obrigatório');
+  }
+
+  try {
+    // 1. Buscar o usuário pelo access_token
+    const { data: user, error: userError } = await supabase
+      .from('usuario_apk')
+      .select('id')
+      .eq('access_token', access_token)
+      .single();
+
+    if (userError || !user) {
+      return res.status(404).send('Usuário não encontrado');
+    }
+
+    const userId = user.id;
+
+    // 2. Buscar todas as compras do usuário com utilizada = false
+    const { data: compras, error: comprasError } = await supabase
+      .from('compra')
+      .select('id_servico')
+      .eq('id_usuario', userId)
+      .eq('utilizada', false);
+
+    if (comprasError) {
+      return res.status(500).send('Erro ao buscar compras');
+    }
+
+    if (!compras || compras.length === 0) {
+      return res.status(200).json({ totalCredito: 0 }); // Sem créditos não utilizados
+    }
+
+    // 3. Contar a quantidade de cada serviço nas compras
+    const servicoCounts = compras.reduce((acc, compra) => {
+      acc[compra.id_servico] = (acc[compra.id_servico] || 0) + 1;
+      return acc;
+    }, {});
+
+    // 4. Obter os valores dos serviços
+    const servicosIds = Object.keys(servicoCounts);
+
+    const { data: servicos, error: servicosError } = await supabase
+      .from('servicos')
+      .select('id, valor')
+      .in('id', servicosIds);
+
+    if (servicosError) {
+      return res.status(500).send('Erro ao buscar valores dos serviços');
+    }
+
+    // 5. Calcular o total de crédito, multiplicando o valor do serviço pela quantidade
+    const totalCredito = servicos.reduce((acc, servico) => {
+      const quantidade = servicoCounts[servico.id] || 0;
+      return acc + servico.valor * quantidade;
+    }, 0);
+
+    res.status(200).json({ totalCredito });
+  } catch (err) {
+    console.error('Erro ao calcular total de créditos:', err);
+    res.status(500).send('Erro ao processar a solicitação');
+  }
+});
+
+
 
 
 

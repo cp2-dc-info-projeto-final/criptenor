@@ -85,24 +85,11 @@
   
     // Busca o ID do usuário da sessão
     onMount(() => {
-        const userData = sessionStorage.getItem('user');
-        if (userData) {
-            try {
-                const parsedUser = JSON.parse(userData);
-                if (parsedUser?.user?.id) {
-                    userId = parsedUser.user.id;
-                } else {
-                    goto('/login');
-                }
-            } catch (error) {
-                console.error('Erro ao fazer parsing dos dados do usuário', error);
-                goto('/login');
-            }
-        } else {
-            goto('/login');
-        }
+      
+      
   
         fetchServices(); // Chama a função para buscar os dados da API
+        fetchCartQuantity();
         swiper = new Swiper('.swiper', {
             direction: 'horizontal',
             loop: true,
@@ -113,6 +100,7 @@
   
     // Função para enviar um serviço para o carrinho
     async function adicionarAoCarrinho(idServico) {
+      var access_token = localStorage.getItem("access_token");
         try {
             const response = await fetch('http://localhost:3000/cadastrar_servico_no_carrinho', {
                 method: 'POST',
@@ -120,12 +108,12 @@
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    id_usuario: userId,
+                    access_token: access_token,
                     id_servico: idServico,
                 }),
             });
   
-            fetchCartQuantity(userId);
+            fetchCartQuantity();
   
             
   
@@ -135,54 +123,60 @@
             console.error('Erro ao adicionar serviço ao carrinho:', error);
         }
     }
+    
+ 
+        
 
 
   
     
-    
+        
     let cartQuantity = 0;
     let showCart = false;
     var responseData = [];
-    
-    async function fetchCartQuantity(userId) {
+    let valorTotal=0;
+
+    async function fetchCartQuantity() {
       try {
-        const response = await fetch(`http://localhost:3000/carrinho/${userId}`);
+        // Obtendo o access_token do localStorage
+        const accessToken = localStorage.getItem('access_token');
+        
+        
+        if (!accessToken) {
+          throw new Error('Access token não encontrado no localStorage');
+        }
+
+        // Fazendo a requisição ao servidor com o access_token no cabeçalho
+        const response = await fetch(`http://localhost:3000/carrinho`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'access_token': accessToken, // Adiciona o token no cabeçalho
+          },
+        });
+
         if (!response.ok) {
           throw new Error('Erro ao buscar a quantidade de itens no carrinho');
         }
-        
+
         // Verifica a resposta
         responseData = await response.json();
+        valorTotal=responseData.valorTotal;
         responseData = responseData.data;
-        console.log(responseData);
-  
-        // Se 'responseData' contiver a chave 'data' e for um array
-        var tamanho = responseData.length;
-        cartQuantity = tamanho;
-        console.log(tamanho);
+        
+        
+
+        // Calcula a quantidade de itens no carrinho
+        cartQuantity = responseData.length;
+        console.log(cartQuantity);
       } catch (error) {
         console.error('Erro ao buscar dados do carrinho:', error);
       }
     }
+    
+
   
-    onMount(() => {
-      const userData = sessionStorage.getItem('user');
-      if (userData) {
-        try {
-          const parsedUser = JSON.parse(userData);
-          if (parsedUser?.user?.id) {
-            userId = parsedUser.user.id;
-            fetchCartQuantity(userId);
-          } else {
-            goto('/login');
-          }
-        } catch (error) {
-          goto('/login');
-        }
-      } else {
-        goto('/login');
-      }
-    });
+    
   
     // Função para abrir o carrinho
     function toggleCart() {
@@ -204,26 +198,44 @@
     
 
     async function removeFromCart(productId) {
-  try {
-    // Simulando uma chamada para remover o produto do carrinho
-    const response = await fetch('http://localhost:3000/apagar_produto_no_carrinho', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ productId }),
-    });
+      const accessToken = localStorage.getItem('access_token');
+      
+      try {
+        const response = await fetch('http://localhost:3000/apagar_produto_no_carrinho', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ id_session: accessToken, id_produto: productId }),
+        });
 
-    if (response.ok) {
-      // Atualize o estado do carrinho (exemplo: remover do array de dados locais)
-      responseData = responseData.filter(item => item.servicos.id !== productId);
-    } else {
-      console.error('Erro ao remover o produto do carrinho.');
+        fetchCartQuantity();
+      } catch (error) {
+        console.error('Erro ao conectar ao servidor:', error);
+      }
     }
-  } catch (error) {
-    console.error('Erro ao conectar ao servidor:', error);
-  }
-}
+
+    async function comprar() {
+      
+      const accessToken = localStorage.getItem('access_token');
+      
+      try {
+        const response = await fetch('http://localhost:3000/comprar', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ access_token: accessToken}),
+        });
+
+        fetchCartQuantity();
+        
+        closeCart();
+        window.location.href="/dashboard"
+      } catch (error) {
+        console.error('Erro ao conectar ao servidor:', error);
+      }
+    }
 
   
   
@@ -405,7 +417,7 @@
     </footer>
     
     <script src="landding/javascript/script.js"></script>
-    {#if userId && cartQuantity > 0}
+    {#if cartQuantity > 0}
     <div class="rounded-square" id="cart-icon-super" on:click={toggleCart}>
       <button class="btn-cart" data-quantity={cartQuantity}>
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="m397.78 316h-205.13a15 15 0 0 1 -14.65-11.67l-34.54-150.48a15 15 0 0 1 14.62-18.36h274.27a15 15 0 0 1 14.65 18.36l-34.6 150.48a15 15 0 0 1 -14.62 11.67zm-193.19-30h181.25l27.67-120.48h-236.6z"></path><path d="m222 450a57.48 57.48 0 1 1 57.48-57.48 57.54 57.54 0 0 1 -57.48 57.48zm0-84.95a27.48 27.48 0 1 0 27.48 27.47 27.5 27.5 0 0 0 -27.48-27.47z"></path><path d="m368.42 450a57.48 57.48 0 1 1 57.48-57.48 57.54 57.54 0 0 1 -57.48 57.48zm0-84.95a27.48 27.48 0 1 0 27.48 27.47 27.5 27.5 0 0 0 -27.48-27.47z"></path><path d="m158.08 165.49a15 15 0 0 1 -14.23-10.26l-25.71-77.23h-47.44a15 15 0 1 1 0-30h58.3a15 15 0 0 1 14.23 10.26l29.13 87.49a15 15 0 0 1 -14.23 19.53z"></path></svg>
@@ -415,7 +427,7 @@
   
   <!-- Overlay do carrinho -->
   {#if showCart}
-    <div class="cart-overlay visible" on:click={closeCart}>
+    <div class="cart-overlay visible">
       <div class="cart-container">
         <div class="cart-header">
           <h2>Carrinho</h2>
@@ -424,13 +436,35 @@
         <div class="product-list">
           {#each responseData as item}
           <div class="product">
-            <span>{item.servicos.nome}</span>
-            <span>R$ {item.servicos.valor}</span>
-            <button class="remove-btn" on:click={() => removeFromCart(item.servicos.id)}>X</button>
+            <span>{item.nome}</span>
+            <span>R$ {item.valor}</span>
+            <span></span>
+            <div class="botao_quantidade_servico">
+              <div class="botao_menos" on:click={() => removeFromCart(item.id_servico)}>
+                -
+
+              </div>
+              <p class="quantidade">
+                {item.quantidade}
+              </p>
+              <div class="botao_mais" on:click={() => adicionarAoCarrinho(item.id_servico)}>
+                +
+              </div>
+            </div>
+            
           </div>          
           {/each}
         </div>
-        <button class="Btn" on:click={() => goto('')}>Concluir compra</button>
+        <div class="footer_cart">
+          
+          
+          <div class="total">
+            <p>Total</p>
+            <p>{valorTotal}</p>
+          </div>
+          <button class="Btn" on:click={() => comprar()}>Concluir compra</button>
+        </div>
+        
       </div>
       
     </div>
@@ -511,7 +545,7 @@
   padding: 20px;
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  width: 300px;
+  width: 40%;
   height: 70vh;
   display: flex;
   flex-direction: column;
@@ -539,9 +573,48 @@
   justify-content: space-between;
   margin: 10px 0;
 }
+.footer_cart{
+
+}
+.footer_cart .total{
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  
+}
+
+/* From Uiverse.io by shadowmurphy */ 
+.input {
+  border: 2px solid transparent;
+  width: 15em;
+  height: 2.5em;
+  padding-left: 0.8em;
+  outline: none;
+  overflow: hidden;
+  background-color: #F3F3F3;
+  border-radius: 10px;
+  transition: all 0.5s;
+}
+
+.input:hover,
+.input:focus {
+  border: 2px solid #4A9DEC;
+  box-shadow: 0px 0px 0px 7px rgb(74, 157, 236, 20%);
+  background-color: white;
+}
+.cod_promocional{
+  width: 100%;
+  height: 80px;
+}
+.footer_cart{
+  border: 1px solid #323232;
+  border-radius: 9px;
+  padding: 15px;
+  
+}
 
 .Btn {
-  margin-top: 10px;
+  margin-top: 20px;
   width: 100%;
   height: 40px;
   display: flex;
@@ -552,6 +625,44 @@
   color: white;
   font-weight: 600;
   cursor: pointer;
+  border-radius: 9px;
+}
+.botao_quantidade_servico{
+  display: flex;
+  align-items: center;
+  width: 70px;
+  justify-content: space-between;
+  border: 1px solid  #323232;
+  border-radius: 18px;
+  padding: 1px
+}
+.botao_quantidade_servico .botao_mais{
+  background-color: #2d8cf0;
+  border-radius: 100%;
+  height: 20px;
+  width: 20px;
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+
+}
+.botao_quantidade_servico .botao_menos{
+  border-radius: 100%;
+  height: 20px;
+  width: 20px;
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+
+}
+.botao_quantidade_servico .botao_menos:hover{
+  background-color: #aaa9a9af;
+}
+.botao_quantidade_servico p{
+  font-size: 15px;
+  
 }
 
   
@@ -621,8 +732,9 @@
       height: 130px;
       position: absolute;
       content: "";
-      background-color: white;
+      background-color:#2d8cf0;
       border-radius: 50%;
+      color: white;
       left: -100%;
       top: 0;
       transition-duration: .3s;

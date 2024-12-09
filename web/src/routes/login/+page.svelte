@@ -1,44 +1,5 @@
-<script>
-  import Nav from "../componentes/Nav.svelte";
 
-  async function handleSubmit(event) {
-    event.preventDefault(); // Impede o envio tradicional do formulário
 
-    const email = document.getElementById('email').value;
-    const senha = document.getElementById('senha').value;
-
-    // Fazer a requisição usando fetch
-    try {
-      const response = await fetch('http://localhost:3000/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: email,
-          senha: senha,
-        }),
-      });
-
-      const data = await response.json();
-
-      // Verifica se o login foi bem-sucedido
-      if (response.ok) {
-        // Armazenar a sessão ou dados do usuário
-        sessionStorage.setItem('user', JSON.stringify(data));
-
-        // Redirecionar para a página inicial
-        window.location.href = '/';
-      } else {
-        // Exibe o erro recebido
-        alert(data.error || 'Erro ao fazer login');
-      }
-    } catch (error) {
-      console.error('Erro ao fazer login:', error);
-      alert('Erro ao fazer login, tente novamente mais tarde.');
-    }
-  }
-</script>
 <link rel="stylesheet" href="landding/styles/styles.css">
 <style>
   /* From Uiverse.io by Yaya12085 */ 
@@ -201,3 +162,44 @@
     
   </div>
 </div>
+<script>
+  import Nav from "../componentes/Nav.svelte";
+
+  async function handleSubmit(event) {
+    event.preventDefault(); // Impede o envio tradicional do formulário
+
+    const email = document.getElementById('email').value;
+    const senha = document.getElementById('senha').value;
+
+    // Fazer a requisição usando fetch
+    try {
+      const response = await fetch('http://localhost:3000/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email,
+          senha: senha,
+        }),
+      });
+
+      const data = await response.json();
+
+      // Verifica se o login foi bem-sucedido
+      if (response.ok) {
+        // Salvar o access_token no localStorage
+        localStorage.setItem('access_token', data.access_token);
+
+        // Redirecionar para a página inicial
+        window.location.href = '/';
+      } else {
+        // Exibe o erro recebido
+        alert(data.error || 'Erro ao fazer login');
+      }
+    } catch (error) {
+      console.error('Erro ao fazer login:', error);
+      alert('Erro ao fazer login, tente novamente mais tarde.');
+    }
+  }
+</script>

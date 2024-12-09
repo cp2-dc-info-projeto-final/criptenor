@@ -1,33 +1,94 @@
-
 <script>
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
 
   let userId = null;
+  let totalCredito = 0; // Inicialize a variável
 
-  // Executa assim que o componente é montado
-  onMount(() => {
-    const userData = sessionStorage.getItem('user');
+  async function buscarTotalCredito() {
+    const access_token = localStorage.getItem('access_token');
+    try {
+      const response = await fetch('http://localhost:3000/total_credito', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ access_token }),
+      });
 
-    if (userData) {
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Total de crédito disponível:', data.totalCredito);
+        return data.totalCredito;
+      } else {
+        console.error('Erro ao buscar total de crédito ou token inválido.');
+        return 0; // Retorna 0 caso falhe
+      }
+    } catch (error) {
+      console.error('Erro ao buscar total de crédito:', error);
+      return 0; // Retorna 0 caso ocorra erro
+    }
+  }
+
+  async function conferirCredencial() {
+    let token;
+    token=localStorage.getItem("access_token")
+    console.log(token);
+    try {
+      const response = await fetch('http://localhost:3000/conferir-credencial-adm', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ access_token: token }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data.user_id;
+      } else {
+        console.error('Token inválido ou erro na verificação.');
+        return null;
+      }
+    } catch (error) {
+      console.error('Erro ao verificar credencial:', error);
+      return null;
+    }
+  }
+
+  onMount(async () => {
+    const token = localStorage.getItem('access_token');
+    if (token) {
       try {
-        const parsedUser = JSON.parse(userData);
-        if (parsedUser?.user?.id) {
-          userId = parsedUser.user.id;
+        const verifiedUserId = await conferirCredencial(token);
+        if (verifiedUserId) {
+          userId = verifiedUserId;
+          console.log('Usuário autenticado com ID:', verifiedUserId);
+
+          // Atualize o total de crédito
+          totalCredito = await buscarTotalCredito();
+        } else {
+          console.log('Token inválido. Redirecionando para login.');
+          goto('/login');
         }
       } catch (error) {
-        console.error('Erro ao fazer parsing dos dados do usuário', error);
+        console.error('Erro ao processar o token do usuário:', error);
+        goto('/login');
       }
+    } else {
+      console.log('Nenhum token encontrado. Redirecionando para login.');
+      goto('/login');
     }
   });
 
-  // Função para fazer logout
   function logout() {
-    sessionStorage.removeItem('user'); // Limpa a sessão
-    userId = null; // Atualiza o estado local para refletir o logout
-    goto('/login'); // Redireciona para a página de login
+    localStorage.removeItem('access_token');
+    userId = null;
+    totalCredito = 0;
+    goto('/login');
   }
 </script>
+
 
 <style>
   header {
@@ -67,9 +128,24 @@
     color: var(--color-neutral-1);
     border-bottom: 3px solid var(--color-primary-4);
   }
+  .info-user-nav{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .info-user-nav p{
+    margin-right: 15px;
+    margin-left: 7.5;
+  }
+  .img-tenorcoin{
+    width: 35px;
+    height: 35px;
+  }
+  .img-tenorcoin img{
+    width: 100%;
+  }
 
   .btn-default {
-  
     border: none;
     cursor: pointer;
     font-size: 16px;
@@ -115,17 +191,19 @@
       text-align: center;
     } 
   }
-  .logo{
+
+  .logo {
     display: flex;
     justify-content: center;
     align-items: center;
     text-align: center;
-    
   }
-  a{
+
+  a {
     text-decoration: none;
   }
-  .button_analise{
+
+  .button_analise {
     text-decoration: none;
   }
 </style>
@@ -162,9 +240,22 @@
 
     <!-- Botão Entrar/Sair -->
     {#if userId}
+    <div class="info-user-nav">
+      <div class="img-tenorcoin">
+        <img src="icon/moedas.png" alt="">
+      </div>
+      
+        <p>{totalCredito}</p>
+
+      
+      
+
       <button class="btn-default" on:click={logout}>
         Sair
       </button>
+
+    </div>
+  
     {:else}
       <a class="button_analise" href="/login">
         <button class="btn-default">

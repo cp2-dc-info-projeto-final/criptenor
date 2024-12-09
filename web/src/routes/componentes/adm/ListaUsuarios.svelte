@@ -91,6 +91,7 @@
                 const usuarioEditado = await response.json();
                 usuarios = usuarios.map(usuario => usuario.id === usuarioEditado.id ? usuarioEditado : usuario);
                 fecharPopup();
+                fetchUsuarios();
             } else {
                 console.error('Erro ao editar:', response.statusText);
             }
