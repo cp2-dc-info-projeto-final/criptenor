@@ -243,241 +243,30 @@
     
 </script>
 
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link rel="stylesheet" href="landding/styles/styles.css">
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="https://unpkg.com/scrollreveal"></script>
-    <title>Criptenor</title>
-</head>
-<body>
-    <Nav/>
-    
-    
-    <main id="content">
-        <section id="home">
-            <div class="shape"></div>
-            <div id="cta">
-                <h1 class="title">
-                    A rede de propaganda
-                    <span>a sua disposição.</span>
-                </h1>
-
-                <p class="description">
-                    A "Rede de Propaganda" da Criptenor é uma ferramenta sofisticada, desenvolvida para compreender a dinâmica das interações nas redes sociais, identificando padrões de comportamento e preferências dos eleitores. Utilizando algoritmos avançados de análise de dados, a plataforma é capaz de segmentar o público-alvo de forma precisa, direcionando mensagens e conteúdos políticos de acordo com as características e interesses de cada grupo de eleitores.
-                </p>
-
-                <div id="cta_buttons">
-                    <a href="/#menu" class="btn-default">
-                        Ver Serviços
-                    </a>
-
-                    <a href="tel:+55555555555" id="phone_button">
-                        <button class="btn-default">
-                            <i class="fa-solid fa-phone"></i>
-                        </button>
-                        (21) 98085-6675
-                    </a>
-                </div>
-
-                <div class="social-media-buttons">
-                    <a target="_blank" href="https://wa.me/+5521980856675">
-                        <i class="fa-brands fa-whatsapp"></i>
-                    </a>
-    
-                    <a target="_blank" href="https://www.instagram.com/criptenor">
-                        <i class="fa-brands fa-instagram"></i>
-                    </a>
-    
-                    <a target="_blank" href="https://www.facebook.com/">
-                        <i class="fa-brands fa-facebook"></i>
-                    </a>
-                </div>
-            </div>
-
-            <div id="banner">
-                <img src="banner.png" alt="">
-            </div>
-        </section>
-
-        <section id="menu">
-            <h2 class="section-title">Serviços</h2>
-            <h3 class="section-subtitle">Análise de Dados</h3>
-        
-            <div id="dishes dishes_servicos">
-                
-                <div class="swiper">
-    <div class="swiper-wrapper">
-      <!-- Itera sobre os serviços e cria um slide para cada serviço -->
-      {#each services as service}
-        <div class="swiper-slide">
-          <div class="card">
-              <div class="card-img">
-                  <div class="img">
-                      <div class="img_servico"> 
-                          <img src={service.path_foto} class="img_servico" alt={service.nome} />
-                      </div>
-                  </div>
-              </div>
-              <div class="card-title">{service.nome}</div>
-              <div class="card-subtitle"> {service.descricao.substring(0, 200)}</div>
-              <hr class="card-divider">
-              <div class="card-footer">
-                  <div class="card-price"><span>R$</span>{service.valor}</div>
-                  <button class="card-btn"  on:click={() => adicionarAoCarrinho(service.id)}>
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="m397.78 316h-205.13a15 15 0 0 1 -14.65-11.67l-34.54-150.48a15 15 0 0 1 14.62-18.36h274.27a15 15 0 0 1 14.65 18.36l-34.6 150.48a15 15 0 0 1 -14.62 11.67zm-193.19-30h181.25l27.67-120.48h-236.6z"></path><path d="m222 450a57.48 57.48 0 1 1 57.48-57.48 57.54 57.54 0 0 1 -57.48 57.48zm0-84.95a27.48 27.48 0 1 0 27.48 27.47 27.5 27.5 0 0 0 -27.48-27.47z"></path><path d="m368.42 450a57.48 57.48 0 1 1 57.48-57.48 57.54 57.54 0 0 1 -57.48 57.48zm0-84.95a27.48 27.48 0 1 0 27.48 27.47 27.5 27.5 0 0 0 -27.48-27.47z"></path><path d="m158.08 165.49a15 15 0 0 1 -14.23-10.26l-25.71-77.23h-47.44a15 15 0 1 1 0-30h58.3a15 15 0 0 1 14.23 10.26l29.13 87.49a15 15 0 0 1 -14.23 19.74z"></path></svg>
-                  </button>
-              </div>
-          </div>
-        </div>
-      {/each}
-    </div>
-  
-    <!-- Botões de navegação -->
-    <div class="swiper-button-prev"></div>
-    <div class="swiper-button-next"></div>
-  
-    <!-- Paginação -->
-    <div class="swiper-pagination"></div>
-  </div>
-            </div>
-        </section>
-
-        <section id="testimonials">
-            <FormularioAvaliacao />
-
-            <div id="testimonials_content">
-                <h2 class="section-title">
-                    Depoimentos
-                </h2>
-                <h3 class="section-subtitle">
-                    O que os clientes falam sobre nós
-                </h3>
-
-                <div id="feedbacks">
-                    {#each displayedFeedbacks as { avaliador, resposta, pontos }}
-                      <div class="feedback">
-                        <div class="feedback-content">
-                          <p class="feedback-avaliador">
-                            {avaliador}
-                          </p>
-                          <p class="feedback-resposta">
-                            {resposta}
-                          </p>
-                          <p class="feedback-pontos">
-                            <span>
-                              {#each Array(pontos) as _, i}
-                                <i class="fa-solid fa-star" style="color:yellow" key={i}></i>
-                              {/each}
-                            </span>
-                          </p>
-                        </div>
-                      </div>
-                    {/each}
-                  </div>
-
-                <div class="pagination">
-                    <button class="btn-default" on:click={() => changePage(-1)} disabled={!canGoBack}>
-                        Voltar
-                    </button>
-                    <button class="btn-default" on:click={() => changePage(1)} disabled={!canGoForward}>
-                        Avançar
-                    </button>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <footer>
-        
-
-        <div id="footer_items">
-            <span id="copyright">
-                &copy 2024 Adeilton Filho, Criptenor.
-            </span>
-
-            <div class="social-media-buttons">
-                <a target="_blank" href="https://wa.me/+5521980856675">
-                    <i class="fa-brands fa-whatsapp"></i>
-                </a>
-
-                <a target="_blank" href="https://www.instagram.com/criptenor">
-                    <i class="fa-brands fa-instagram"></i>
-                </a>
-
-                <a target="_blank" href="https://www.facebook.com/">
-                    <i class="fa-brands fa-facebook"></i>
-                </a>
-            </div>
-        </div>
-    </footer>
-    
-    <script src="landding/javascript/script.js"></script>
-    {#if cartQuantity > 0}
-    <div class="rounded-square" id="cart-icon-super" on:click={toggleCart}>
-      <button class="btn-cart" data-quantity={cartQuantity}>
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="m397.78 316h-205.13a15 15 0 0 1 -14.65-11.67l-34.54-150.48a15 15 0 0 1 14.62-18.36h274.27a15 15 0 0 1 14.65 18.36l-34.6 150.48a15 15 0 0 1 -14.62 11.67zm-193.19-30h181.25l27.67-120.48h-236.6z"></path><path d="m222 450a57.48 57.48 0 1 1 57.48-57.48 57.54 57.54 0 0 1 -57.48 57.48zm0-84.95a27.48 27.48 0 1 0 27.48 27.47 27.5 27.5 0 0 0 -27.48-27.47z"></path><path d="m368.42 450a57.48 57.48 0 1 1 57.48-57.48 57.54 57.54 0 0 1 -57.48 57.48zm0-84.95a27.48 27.48 0 1 0 27.48 27.47 27.5 27.5 0 0 0 -27.48-27.47z"></path><path d="m158.08 165.49a15 15 0 0 1 -14.23-10.26l-25.71-77.23h-47.44a15 15 0 1 1 0-30h58.3a15 15 0 0 1 14.23 10.26l29.13 87.49a15 15 0 0 1 -14.23 19.53z"></path></svg>
-      </button>
-    </div>
-  {/if}
-  
-  <!-- Overlay do carrinho -->
-  {#if showCart}
-    <div class="cart-overlay visible">
-      <div class="cart-container">
-        <div class="cart-header">
-          <h2>Carrinho</h2>
-          <button class="close-cart-btn" on:click={closeCart}>&times;</button>
-        </div>
-        <div class="product-list">
-          {#each responseData as item}
-          <div class="product">
-            <span>{item.nome}</span>
-            <span>R$ {item.valor}</span>
-            <span></span>
-            <div class="botao_quantidade_servico">
-              <div class="botao_menos" on:click={() => removeFromCart(item.id_servico)}>
-                -
-
-              </div>
-              <p class="quantidade">
-                {item.quantidade}
-              </p>
-              <div class="botao_mais" on:click={() => adicionarAoCarrinho(item.id_servico)}>
-                +
-              </div>
-            </div>
-            
-          </div>          
-          {/each}
-        </div>
-        <div class="footer_cart">
-          
-          
-          <div class="total">
-            <p>Total</p>
-            <p>{valorTotal}</p>
-          </div>
-          <button class="Btn" on:click={() => comprar()}>Concluir compra</button>
-        </div>
-        
-      </div>
-      
-    </div>
-  {/if}
-</body>
-</html>
-
-
-
-
-  
 <style>
-
+  #home2{
+    justify-content: space-around;
+  }
+  .banner1{
+    width: 40%;
+  }
+  #banner1 img{
+    width: 40vw;
+  }
+  #cta1{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+  }
+  #ctal1 .descricao{
+    width: 40vw;
+    
+  }
+p{
+  font-size: 19px;
+}
 .rounded-square {
       position: fixed;
       z-index: 100;
@@ -934,6 +723,278 @@ then set the desired styles for .card-img. */
 
   </style>
   
+
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="landding/styles/styles.css">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://unpkg.com/scrollreveal"></script>
+    <title>Criptenor</title>
+</head>
+<body>
+    <Nav/>
+    
+    
+    <main id="content">
+        <section id="home">
+            <div class="shape"></div>
+            <div id="cta">
+                <h1 class="title">
+                    A rede de propaganda
+                    <span>a sua disposição.</span>
+                </h1>
+
+                <p class="description">
+                    A "Rede de Propaganda" da Criptenor é uma ferramenta sofisticada, desenvolvida para compreender a dinâmica das interações nas redes sociais, identificando padrões de comportamento e preferências dos eleitores. Utilizando algoritmos avançados de análise de dados, a plataforma é capaz de segmentar o público-alvo de forma precisa, direcionando mensagens e conteúdos políticos de acordo com as características e interesses de cada grupo de eleitores.
+                </p>
+
+                <div id="cta_buttons">
+                    <a href="/#menu" class="btn-default">
+                        Ver Serviços
+                    </a>
+
+                    <a href="tel:+55555555555" id="phone_button">
+                        <button class="btn-default">
+                            <i class="fa-solid fa-phone"></i>
+                        </button>
+                        (21) 98085-6675
+                    </a>
+                </div>
+
+                <div class="social-media-buttons">
+                    <a target="_blank" href="https://wa.me/+5521980856675">
+                        <i class="fa-brands fa-whatsapp"></i>
+                    </a>
+    
+                    <a target="_blank" href="https://www.instagram.com/criptenor">
+                        <i class="fa-brands fa-instagram"></i>
+                    </a>
+    
+                    <a target="_blank" href="https://www.facebook.com/">
+                        <i class="fa-brands fa-facebook"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div id="banner">
+                <img src="banner.png" alt="">
+            </div>
+        </section>
+        
+
+      <section id="home3">
+        <h1 class="title">
+          Hierarquia de Relacionamento
+          <span>a sua disposição.</span>
+      </h1>
+        
+        <p class="description">
+          A "Rede de Propaganda" da Criptenor é uma ferramenta sofisticada, desenvolvida para compreender a dinâmica das interações nas redes sociais, identificando padrões de comportamento e preferências dos eleitores. Utilizando algoritmos avançados de análise de dados, a plataforma é capaz de segmentar o público-alvo de forma precisa, direcionando mensagens e conteúdos políticos de acordo com as características e interesses de cada grupo de eleitores. A "Rede de Propaganda" da Criptenor é uma ferramenta sofisticada, desenvolvida para compreender a dinâmica das interações nas redes sociais, identificando padrões de comportamento e preferências dos eleitores. Utilizando algoritmos avançados de análise de dados, a plataforma é capaz de segmentar o público-alvo de forma precisa, direcionando mensagens e conteúdos políticos de acordo com as características e interesses de cada grupo de eleitores. A "Rede de Propaganda" da Criptenor é uma ferramenta sofisticada, desenvolvida para compreender a dinâmica das interações nas redes sociais, identificando padrões de comportamento e preferências dos eleitores. Utilizando algoritmos avançados de análise de dados, a plataforma é capaz de segmentar o público-alvo de forma precisa, direcionando mensagens e conteúdos políticos de acordo com as características e interesses de cada grupo de eleitores.
+      </p>
+
+   
+
+      <div id="cta1">
+        
+        <div id="banner1">
+          <img src="teia-relacionamento.png" alt="">
+      </div>
+      <div class="descricao" style="width: 90%;">
+        <p class="description">
+          A "Rede de Propaganda" da Criptenor é uma ferramenta sofisticada, desenvolvida para compreender a dinâmica das interações nas redes sociais, identificando padrões de comportamento e preferências dos eleitores. Utilizando algoritmos avançados de análise de dados, a plataforma é capaz de segmentar o público-alvo de forma precisa, direcionando mensagens e conteúdos políticos de acordo com as características e interesses de cada grupo de eleitores.
+          A "Rede de Propaganda" da Criptenor é uma ferramenta sofisticada, desenvolvida para compreender a dinâmica das interações nas redes sociais, identificando padrões de comportamento e preferências dos eleitores. Utilizando algoritmos avançados de análise de dados, a plataforma é capaz de segmentar o público-alvo de forma precisa, direcionando mensagens e conteúdos políticos de acordo com as características e interesses de cada grupo de eleitores.
+          A "Rede de Propaganda" da Criptenor é uma ferramenta sofisticada, desenvolvida para compreender a dinâmica das interações nas redes sociais, identificando padrões de comportamento e preferências dos eleitores. Utilizando algoritmos avançados de análise de dados, a plataforma é capaz de segmentar o público-alvo de forma precisa, direcionando mensagens e conteúdos políticos de acordo com as características e interesses de cada grupo de eleitores.
+          A "Rede de Propaganda" da Criptenor é uma ferramenta sofisticada, desenvolvida para compreender a dinâmica das interações nas redes sociais, identificando padrões de comportamento e preferências dos eleitores. Utilizando algoritmos avançados de análise de dados, a plataforma é capaz de segmentar o público-alvo de forma precisa, direcionando mensagens e conteúdos políticos de acordo com as características e interesses de cada grupo de eleitores.
+          
+        </p>
+
+      </div>
+
+        
+
+       
+
+        
+    </div>
+      </section>
+
+        <section id="menu">
+            <h2 class="section-title">Serviços</h2>
+            <h3 class="section-subtitle">Análise de Dados</h3>
+        
+            <div id="dishes dishes_servicos">
+                
+                <div class="swiper">
+    <div class="swiper-wrapper">
+      <!-- Itera sobre os serviços e cria um slide para cada serviço -->
+      {#each services as service}
+        <div class="swiper-slide">
+          <div class="card">
+              <div class="card-img">
+                  <div class="img">
+                      <div class="img_servico"> 
+                          <img src={service.path_foto} class="img_servico" alt={service.nome} />
+                      </div>
+                  </div>
+              </div>
+              <div class="card-title">{service.nome}</div>
+              <div class="card-subtitle"> {service.descricao.substring(0, 200)}</div>
+              <hr class="card-divider">
+              <div class="card-footer">
+                  <div class="card-price"><span>R$</span>{service.valor}</div>
+                  <button class="card-btn"  on:click={() => adicionarAoCarrinho(service.id)}>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="m397.78 316h-205.13a15 15 0 0 1 -14.65-11.67l-34.54-150.48a15 15 0 0 1 14.62-18.36h274.27a15 15 0 0 1 14.65 18.36l-34.6 150.48a15 15 0 0 1 -14.62 11.67zm-193.19-30h181.25l27.67-120.48h-236.6z"></path><path d="m222 450a57.48 57.48 0 1 1 57.48-57.48 57.54 57.54 0 0 1 -57.48 57.48zm0-84.95a27.48 27.48 0 1 0 27.48 27.47 27.5 27.5 0 0 0 -27.48-27.47z"></path><path d="m368.42 450a57.48 57.48 0 1 1 57.48-57.48 57.54 57.54 0 0 1 -57.48 57.48zm0-84.95a27.48 27.48 0 1 0 27.48 27.47 27.5 27.5 0 0 0 -27.48-27.47z"></path><path d="m158.08 165.49a15 15 0 0 1 -14.23-10.26l-25.71-77.23h-47.44a15 15 0 1 1 0-30h58.3a15 15 0 0 1 14.23 10.26l29.13 87.49a15 15 0 0 1 -14.23 19.74z"></path></svg>
+                  </button>
+              </div>
+          </div>
+        </div>
+      {/each}
+    </div>
+  
+    <!-- Botões de navegação -->
+    <div class="swiper-button-prev"></div>
+    <div class="swiper-button-next"></div>
+  
+    <!-- Paginação -->
+    <div class="swiper-pagination"></div>
+  </div>
+            </div>
+        </section>
+
+        <section id="testimonials">
+            <FormularioAvaliacao />
+
+            <div id="testimonials_content">
+                <h2 class="section-title">
+                    Depoimentos
+                </h2>
+                <h3 class="section-subtitle">
+                    O que os clientes falam sobre nós
+                </h3>
+
+                <div id="feedbacks">
+                    {#each displayedFeedbacks as { avaliador, resposta, pontos }}
+                      <div class="feedback">
+                        <div class="feedback-content">
+                          <p class="feedback-avaliador">
+                            {avaliador}
+                          </p>
+                          <p class="feedback-resposta">
+                            {resposta}
+                          </p>
+                          <p class="feedback-pontos">
+                            <span>
+                              {#each Array(pontos) as _, i}
+                                <i class="fa-solid fa-star" style="color:yellow" key={i}></i>
+                              {/each}
+                            </span>
+                          </p>
+                        </div>
+                      </div>
+                    {/each}
+                  </div>
+
+                <div class="pagination">
+                    <button class="btn-default" on:click={() => changePage(-1)} disabled={!canGoBack}>
+                        Voltar
+                    </button>
+                    <button class="btn-default" on:click={() => changePage(1)} disabled={!canGoForward}>
+                        Avançar
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        
+
+        <div id="footer_items">
+            <span id="copyright">
+                &copy 2024 Adeilton Filho, Criptenor.
+            </span>
+
+            <div class="social-media-buttons">
+                <a target="_blank" href="https://wa.me/+5521980856675">
+                    <i class="fa-brands fa-whatsapp"></i>
+                </a>
+
+                <a target="_blank" href="https://www.instagram.com/criptenor">
+                    <i class="fa-brands fa-instagram"></i>
+                </a>
+
+                <a target="_blank" href="https://www.facebook.com/">
+                    <i class="fa-brands fa-facebook"></i>
+                </a>
+            </div>
+        </div>
+    </footer>
+    
+    <script src="landding/javascript/script.js"></script>
+    {#if cartQuantity > 0}
+    <div class="rounded-square" id="cart-icon-super" on:click={toggleCart}>
+      <button class="btn-cart" data-quantity={cartQuantity}>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="m397.78 316h-205.13a15 15 0 0 1 -14.65-11.67l-34.54-150.48a15 15 0 0 1 14.62-18.36h274.27a15 15 0 0 1 14.65 18.36l-34.6 150.48a15 15 0 0 1 -14.62 11.67zm-193.19-30h181.25l27.67-120.48h-236.6z"></path><path d="m222 450a57.48 57.48 0 1 1 57.48-57.48 57.54 57.54 0 0 1 -57.48 57.48zm0-84.95a27.48 27.48 0 1 0 27.48 27.47 27.5 27.5 0 0 0 -27.48-27.47z"></path><path d="m368.42 450a57.48 57.48 0 1 1 57.48-57.48 57.54 57.54 0 0 1 -57.48 57.48zm0-84.95a27.48 27.48 0 1 0 27.48 27.47 27.5 27.5 0 0 0 -27.48-27.47z"></path><path d="m158.08 165.49a15 15 0 0 1 -14.23-10.26l-25.71-77.23h-47.44a15 15 0 1 1 0-30h58.3a15 15 0 0 1 14.23 10.26l29.13 87.49a15 15 0 0 1 -14.23 19.53z"></path></svg>
+      </button>
+    </div>
+  {/if}
+  
+  <!-- Overlay do carrinho -->
+  {#if showCart}
+    <div class="cart-overlay visible">
+      <div class="cart-container">
+        <div class="cart-header">
+          <h2>Carrinho</h2>
+          <button class="close-cart-btn" on:click={closeCart}>&times;</button>
+        </div>
+        <div class="product-list">
+          {#each responseData as item}
+          <div class="product">
+            <span>{item.nome}</span>
+            <span>R$ {item.valor}</span>
+            <span></span>
+            <div class="botao_quantidade_servico">
+              <div class="botao_menos" on:click={() => removeFromCart(item.id_servico)}>
+                -
+
+              </div>
+              <p class="quantidade">
+                {item.quantidade}
+              </p>
+              <div class="botao_mais" on:click={() => adicionarAoCarrinho(item.id_servico)}>
+                +
+              </div>
+            </div>
+            
+          </div>          
+          {/each}
+        </div>
+        <div class="footer_cart">
+          
+          
+          <div class="total">
+            <p>Total</p>
+            <p>{valorTotal}</p>
+          </div>
+          <button class="Btn" on:click={() => comprar()}>Concluir compra</button>
+        </div>
+        
+      </div>
+      
+    </div>
+  {/if}
+</body>
+</html>
+
+
+
+
+  
+
   
   
   

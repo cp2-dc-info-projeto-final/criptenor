@@ -329,7 +329,7 @@ app.post('/conferir-credencial-adm', async (req, res) => {
       .from('usuario_apk')
       .select('id, adm, email_confirmado')
       .eq('access_token', access_token)
-      .eq('adm', true)
+      
       .limit(1);
 
     if (!usuarios || usuarios.length === 0) {
@@ -388,7 +388,8 @@ app.post('/cadastro_usuario', async (req, res) => {
         nome: nome,
         usuario: email, 
         arroba: arroba, 
-        senha: hashedPassword // Armazenando a senha criptografada
+        senha: hashedPassword, // Armazenando a senha criptografada
+        email_confirmado:false
       }]);
 
     if (error) {
@@ -442,7 +443,103 @@ app.post('/inserir_avaliacao', async (req, res) => {
 
 
 
-// Configuração da sessão
+
+
+// Middleware para upload da imagem
+app.post('/alterar_informacoes_perfil', upload.single('foto'), async (req, res) => {
+  const { access_token, nome, usuario, arroba } = req.body;
+
+  try {
+    // Verificar o usuário pelo access token
+    const { data: userExists, error: userError } = await supabase
+      .from('usuario_apk')
+      .select('*')
+      .eq('access_token', access_token)
+      .single();
+
+    if (userError) {
+      console.error(userError);
+      return res.status(500).json({ error: 'Erro ao verificar usuário' });
+    }
+
+    if (!userExists) {
+      return res.status(404).json({ error: 'Usuário não encontrado' });
+    }
+
+    // Verificar se o novo usuário já está em uso por outro usuário
+    const { data: existingUser, error: checkError } = await supabase
+      .from('usuario_apk')
+      .select('*')
+      .eq('usuario', usuario)
+      .neq('access_token', access_token);
+
+    if (checkError) {
+      console.error(checkError);
+      return res.status(500).json({ error: 'Erro ao verificar usuário' });
+    }
+
+    if (existingUser && existingUser.length > 0) {
+      return res.status(400).json({ error: 'Usuário já está em uso' });
+    }
+
+    let path_foto = null;
+
+    // Se a imagem for enviada, faça o upload para o Supabase
+    if (req.file) {
+      const hash = crypto.createHash('sha256').update(req.file.originalname + Date.now()).digest('hex');
+      const uniqueName = `${hash}_${req.file.originalname}`;
+
+      const { data: uploadData, error: uploadError } = await supabase
+        .storage
+        .from('app')
+        .upload(`/foto_de_perfil/${uniqueName}`, req.file.buffer, {
+          contentType: req.file.mimetype,
+        });
+
+      if (uploadError) {
+        console.error('Erro no upload da imagem:', uploadError);
+        return res.status(500).json({ error: 'Erro ao fazer upload da imagem' });
+      }
+
+      const { data: publicData } = await supabase
+        .storage
+        .from('foto_de_perfil')
+        .getPublicUrl(uploadData.path);
+
+      path_foto = "https://vkjrrppgjzgtastjzgyg.supabase.co/storage/v1/object/public/app/foto_de_perfil/"+uniqueName;
+      console.log(path_foto);
+    }
+
+    // Atualizar as informações do usuário no banco de dados
+    const updatedFields = { nome, usuario, arroba };
+
+    if (path_foto) {
+      updatedFields.path_foto = path_foto;
+    }
+
+    const { error: updateError } = await supabase
+      .from('usuario_apk')
+      .update(updatedFields)
+      .eq('access_token', access_token);
+
+    if (updateError) {
+      console.error(updateError);
+      return res.status(500).json({ error: 'Erro ao atualizar perfil do usuário' });
+    }
+
+    res.status(200).json({
+      message: 'Perfil atualizado com sucesso',
+      path_foto
+    });
+  } catch (err) {
+    console.error('Erro interno:', err);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+
+
+
 
 
 
@@ -465,6 +562,9 @@ app.get('/usuarios', async (req, res) => {
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
+
+
+
 
 // Rota para buscar um usuário específico por arroba
 app.get('/usuario/:arroba', async (req, res) => {
@@ -958,6 +1058,34 @@ app.get('/carrinho', async (req, res) => {
   }
 });
 
+app.get('/usuario_perfil', async (req, res) => {
+  const { access_token } = req.headers;
+
+  if (!access_token) {
+    return res.status(400).send('Access token é obrigatório');
+  }
+
+  try {
+    // Buscar o usuário pelo access_token na tabela usuario_apk
+    const { data: user, error: userError } = await supabase
+      .from('usuario_apk')
+      .select("*") // Deve ser um array ou uma string
+      .eq('access_token', access_token)
+      .single();
+
+    if (userError) {
+      return res.status(404).send('Usuário não encontrado');
+    }
+
+    return res.status(200).json({
+      message: 'Perfil do usuário encontrado com sucesso',
+      data: user
+    });
+  } catch (err) {
+    console.error(err);
+    
+  }
+});
 
 
 
@@ -1116,6 +1244,7 @@ app.post('/comprar', async (req, res) => {
   }
 });
 
+
 app.post('/total_credito', async (req, res) => {
   const { access_token } = req.body;
 
@@ -1137,48 +1266,140 @@ app.post('/total_credito', async (req, res) => {
 
     const userId = user.id;
 
-    // 2. Buscar todas as compras do usuário com utilizada = false
-    const { data: compras, error: comprasError } = await supabase
-      .from('compra')
-      .select('id_servico')
-      .eq('id_usuario', userId)
-      .eq('utilizada', false);
+    // 2. Somar o total de créditos do usuário
+    const { data: creditos, error: creditosError } = await supabase
+      .from('credito')
+      .select('total')
+      .eq('id_usuario', userId);
 
-    if (comprasError) {
-      return res.status(500).send('Erro ao buscar compras');
+    if (creditosError) {
+      return res.status(500).send('Erro ao buscar créditos');
     }
 
-    if (!compras || compras.length === 0) {
-      return res.status(200).json({ totalCredito: 0 }); // Sem créditos não utilizados
+    const totalCreditos = creditos.reduce((acc, credito) => acc + credito.total, 0);
+
+    // 3. Somar o total de débitos do usuário
+    const { data: debitos, error: debitosError } = await supabase
+      .from('debito')
+      .select('total')
+      .eq('id_usuario', userId);
+
+    if (debitosError) {
+      return res.status(500).send('Erro ao buscar débitos');
     }
 
-    // 3. Contar a quantidade de cada serviço nas compras
-    const servicoCounts = compras.reduce((acc, compra) => {
-      acc[compra.id_servico] = (acc[compra.id_servico] || 0) + 1;
-      return acc;
-    }, {});
+    const totalDebitos = debitos.reduce((acc, debito) => acc + debito.total, 0);
 
-    // 4. Obter os valores dos serviços
-    const servicosIds = Object.keys(servicoCounts);
+    // 4. Calcular o saldo total (crédito - débito)
+    const saldoTotal = totalCreditos - totalDebitos;
 
-    const { data: servicos, error: servicosError } = await supabase
-      .from('servicos')
-      .select('id, valor')
-      .in('id', servicosIds);
-
-    if (servicosError) {
-      return res.status(500).send('Erro ao buscar valores dos serviços');
-    }
-
-    // 5. Calcular o total de crédito, multiplicando o valor do serviço pela quantidade
-    const totalCredito = servicos.reduce((acc, servico) => {
-      const quantidade = servicoCounts[servico.id] || 0;
-      return acc + servico.valor * quantidade;
-    }, 0);
-
-    res.status(200).json({ totalCredito });
+    res.status(200).json({ saldoTotal });
   } catch (err) {
-    console.error('Erro ao calcular total de créditos:', err);
+    console.error('Erro ao calcular saldo total de créditos:', err);
+    res.status(500).send('Erro ao processar a solicitação');
+  }
+});
+
+
+app.post('/realizar_deposito', async (req, res) => {
+  const { access_token, valor } = req.body;
+
+  if (!access_token || valor == null) {
+    return res.status(400).send('Access token e valor são obrigatórios');
+  }
+
+  if (valor <= 0) {
+    return res.status(400).send('O valor do depósito deve ser maior que zero');
+  }
+
+  try {
+    // 1. Buscar o usuário pelo access_token
+    const { data: user, error: userError } = await supabase
+      .from('usuario_apk')
+      .select('id')
+      .eq('access_token', access_token)
+      .single();
+
+    if (userError || !user) {
+      return res.status(404).send('Usuário não encontrado');
+    }
+
+    const userId = user.id;
+
+    // 2. Inserir o valor na tabela crédito
+    const { error: creditoError } = await supabase
+      .from('credito')
+      .insert([{ id_usuario: userId, total: valor }]);
+
+    if (creditoError) {
+      console.error('Erro ao inserir depósito:', creditoError);
+      return res.status(500).send('Erro ao realizar depósito');
+    }
+
+    res.status(200).send('Depósito realizado com sucesso');
+  } catch (err) {
+    console.error('Erro ao processar depósito:', err);
+    res.status(500).send('Erro ao processar a solicitação');
+  }
+});
+
+app.post('/realizar_debito', async (req, res) => {
+  const { access_token, valor } = req.body;
+
+  if (!access_token || valor == null) {
+    return res.status(400).send('Access token e valor são obrigatórios');
+  }
+
+  if (valor <= 0) {
+    return res.status(400).send('O valor do débito deve ser maior que zero');
+  }
+
+  try {
+    // 1. Buscar o usuário pelo access_token
+    const { data: user, error: userError } = await supabase
+      .from('usuario_apk')
+      .select('id, saldo') // Supondo que o saldo do usuário esteja na tabela
+      .eq('access_token', access_token)
+      .single();
+
+    if (userError || !user) {
+      return res.status(404).send('Usuário não encontrado');
+    }
+
+    const userId = user.id;
+    const saldoDisponivel = user.saldo;
+
+    // 2. Verificar se há saldo suficiente para o débito
+    if (saldoDisponivel < valor) {
+      return res.status(400).send('Saldo insuficiente');
+    }
+
+    // 3. Atualizar o saldo do usuário
+    const novoSaldo = saldoDisponivel - valor;
+    const { error: saldoError } = await supabase
+      .from('usuario_apk')
+      .update({ saldo: novoSaldo })
+      .eq('id', userId);
+
+    if (saldoError) {
+      console.error('Erro ao atualizar saldo:', saldoError);
+      return res.status(500).send('Erro ao atualizar saldo do usuário');
+    }
+
+    // 4. Inserir o valor na tabela débito
+    const { error: debitoError } = await supabase
+      .from('debito')
+      .insert([{ id_usuario: userId, total: valor }]);
+
+    if (debitoError) {
+      console.error('Erro ao inserir débito:', debitoError);
+      return res.status(500).send('Erro ao realizar débito');
+    }
+
+    // Resposta de sucesso
+    res.status(200).send('Débito realizado com sucesso');
+  } catch (err) {
+    console.error('Erro ao processar débito:', err);
     res.status(500).send('Erro ao processar a solicitação');
   }
 });
@@ -1233,7 +1454,39 @@ app.post('/alterar_usuario/:id', async (req, res) => {
   }
 });
 
+app.post('/alterar_senha', async (req, res) => {
+  const { access_token, senha } = req.body;
 
+  try {
+    // Verificar o usuário pelo access token
+    const { data: userExists, error: userError } = await supabase
+      .from('usuario_apk')
+      .select('*')
+      .eq('access_token', access_token)
+      .single();
+
+  
+
+    // Criptografar a senha usando bcrypt
+    const hashedPassword = await bcrypt.hash(senha, 10);
+
+    // Atualizar a senha do usuário no banco de dados
+    const { error: updateError } = await supabase
+      .from('usuario_apk')
+      .update({ senha: hashedPassword })
+      .eq('access_token', access_token);
+
+    if (updateError) {
+      console.error(updateError);
+      return res.status(500).json({ error: 'Erro ao atualizar senha do usuário' });
+    }
+
+    res.status(200).json({ message: 'Senha atualizada com sucesso' });
+  } catch (err) {
+    console.error('Erro interno:', err);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+}); 
 
 
 

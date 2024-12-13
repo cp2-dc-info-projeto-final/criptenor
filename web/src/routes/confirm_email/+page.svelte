@@ -20,7 +20,7 @@
           });
 
           if (response.status == 200) {
-              window.location.href = "/";
+              window.location.href = "/dashboard";
           } else if (response.status === 401) {
               codigoIncorreto = true;
           }

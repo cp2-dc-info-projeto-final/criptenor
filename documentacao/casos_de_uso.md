@@ -1,105 +1,110 @@
+# Casos de Uso - Criptenor Dashboard
 
-# CASOS DE USO CRIPTENOR DASHBOARD
+---
 
 ## Cadastro
-- Acessar a página de login.
-- Preencher o campo **Email**.
-- Preencher o campo **Senha**.
-- Preencher o campo **Nome**.
-- Preencher o campo **Arroba do Instagram**.
-- Clicar no botão **Submit** para enviar o formulário.
+
+1. Acesse a página de **Cadastro**.  
+2. Preencha os seguintes campos obrigatórios:  
+   - **Email**  
+   - **Senha**  
+   - **Nome**  
+   - **Arroba do Instagram**  
+3. Clique no botão **Submit** para enviar o formulário.  
+4. O sistema redirecionará você automaticamente para a página de **Login**.  
+
+---
 
 ## Entrar
-- Acessar a página de cadastro.
-- Preencher o campo **Email**.
-- Preencher o campo **Senha**.
-- Clicar no botão **Entrar**.
-- O sistema deve redirecionar o usuário para a página principal.
 
-## Sair / Terminar sessão
-- Se estiver logado
-    - Localize o botão "Sair" na barra de navegação
-    - Clique
-    - Saiu. 
+1. Acesse a página de **Entrar**.  
+2. Preencha os campos:  
+   - **Email**  
+   - **Senha**  
+3. Clique no botão **Entrar**.  
+4. O sistema redirecionará o usuário para o **Dashboard**.  
+
+---
 
 ## Visualizar Perfil
-- A partir da página principal, o usuário pode acessar seu perfil e visualizar as métricas associadas.
 
-## Acesso ao Painel de Administração de Usuários
-- Fazer login:
-    - Se o usuário for um **Administrador**, o sistema deve redirecioná-lo automaticamente para o painel de administração.
+1. [Entre na sua conta](#entrar).  
+2. Clique na sua **foto de perfil**, localizada no canto superior direito da tela.  
+3. No menu que será exibido, clique na opção **Perfil** para visualizar suas informações.  
 
-## Exclusão de Usuário
-- Fazer login:
-    - Se o usuário for um **Administrador**, será redirecionado para o painel de administração.
-    - Clicar na opção do menu "Usuários"
-    - Localizar o usuário a ser excluído.
-    - Clicar na opção do menu "Usuários"
-    - Localizar o usuário a ser editado.
-    - Localizar o botão **Editar** representado por um lápis.
-    - Clicar no ícone de lixeira (botão vermelho).
-    - Confirmar a exclusão.
+---
 
-## Edição de Usuário
-- Fazer login:
-    - Se o usuário for um **Administrador**, será redirecionado para o painel de administração.
-    - Clicar na opção do menu "Usuários"
-    - Localizar o usuário a ser editado.
-    - Clicar no botão **Editar** representado por um lápis.
-    - Atualizar os campos necessários com as informações desejadas.
-    - Clique no botão "Salvar Alterações"
+## Realizar Depósito no Perfil
 
-## Enviar Avaliação
-- Entrar na página inicial
-    - Rolar até avaliação ou clicar na barra de navegação
-    - Escreva Seu nome 
-    - Escreva sua avaliação do site
-    - Dê uma nota de 1 a 5
-    - Clique em enviar
+1. [Entre na sua conta](#entrar).  
+2. Clique na sua **foto de perfil**, localizada no canto superior direito da tela.  
+3. No menu que será exibido, clique na opção **Perfil** para visualizar suas informações.  
+4. Localize sua carteira no lado direito da tela.  
+5. Clique no botão **Realizar Depósito**.  
+6. Selecione o valor do depósito.  
+7. Clique em **Confirmar Depósito**.  
 
-## Inserir Produtos no carrinho
-- Necessário Login:
-    - Login:
-        - Acessar a página de login.
-        - Preencher o campo **Email**.
-        - Preencher o campo **Senha**.
-        - Clicar no botão **Submit** para enviar o formulário.
+---
 
-    - Entrar na tela principal 
-    - Rolar até serviços
-    - clicar no icone referente a um carrinho de compra
+## Editar Nome do Perfil
 
-## Visualizar Produtos nos carrinhos
-- Necessário Login:
-    - Login:
-        - Acessar a página de login.
-        - Preencher o campo **Email**.
-        - Preencher o campo **Senha**.
-        - Clicar no botão **Submit** para enviar o formulário.
-
-    - Entrar na tela principal 
-    - Rolar até serviços
-    - Se já tiver itens adicionados:
-        - Clique no icone de carrinho no canto superior esquerdo
-        - Visualize todos os itens adicionados anteriormente abaixo
-        - Caso queira fechar clique no icone "X" no canto seuperior esquerdo do carrinho
-
-## Finalizar Compra:
-- Necessário Login:
-    - Login:
-        - Acessar a página de login.
-        - Preencher o campo **Email**.
-        - Preencher o campo **Senha**.
-        - Clicar no botão **Submit** para enviar o formulário.
-
-    - Entrar na tela principal 
-    - Clique no icone de carrinho no canto superior esquerdo
-    - Visualize todos os itens adicionados anteriormente abaixo
-    - Finalize a compra clicando no botão finalizar
-
-##  Entrar no Instagram I:
-- Entrar na página inicial
-    - Clicar no icone do instagram no canto inferior esquerdo
-    - 
+1. [Entre na sua conta](#entrar).  
+2. Clique na sua **foto de perfil**, localizada no canto superior direito da tela.  
+3. No menu que será exibido, clique na opção **Perfil** para visualizar suas informações.  
+4. No canto esquerdo, localize a seção do seu perfil.  
+5. Encontre o campo **Nome**, definido durante o [Cadastro](#cadastro).  
+6. Edite o campo **Nome** conforme sua necessidade.  
 
 
+## Editar Arroba do instagram do Perfil
+
+1. [Entre na sua conta](#entrar).  
+2. Clique na sua **foto de perfil**, localizada no canto superior direito da tela.  
+3. No menu que será exibido, clique na opção **Perfil** para visualizar suas informações.  
+4. No canto esquerdo, localize a seção do seu perfil.  
+5. Encontre o campo **Arroba Instagram**, definido durante o [Cadastro](#cadastro).  
+6. Edite o campo **Arroba Instagram** conforme sua necessidade.  
+
+
+## Editar E-mail do perfil
+
+1. [Entre na sua conta](#entrar).  
+2. Clique na sua **foto de perfil**, localizada no canto superior direito da tela.  
+3. No menu que será exibido, clique na opção **Perfil** para visualizar suas informações.  
+4. No canto esquerdo, localize a seção do seu perfil.  
+5. Encontre o campo **E-mail**, definido durante o [Cadastro](#cadastro).  
+6. Edite o campo **E-email** conforme sua necessidade.  
+
+
+## Editar Senha do perfil
+
+1. [Entre na sua conta](#entrar).  
+2. Clique na sua **foto de perfil**, localizada no canto superior direito da tela.  
+3. No menu que será exibido, clique na opção **Perfil** para visualizar suas informações.  
+4. No canto esquerdo, localize a seção do seu perfil.  
+5. Encontre o campo o botão **Alterar Senha**, definido durante o [Cadastro](#cadastro).  
+6. Coloque sua a nova senha e confirme a nova senha
+7. Clique em confirmar caso realmente queira alterar se não clique em cancelar
+
+
+## Realizar Avaliação 
+
+1. Entre na página principal
+2. Na barra de navegação superior clique em Avaliações
+3. Coloque seu nome, coloque sua descrição
+4. Realize uma avaliação de 1 a 5 para o site
+5. Clique no botão enbiar
+
+
+
+##  Visualizar as avalições realizadas
+
+1. Entre na página principal
+2. Na barra de navegação superior clique em Avaliações
+3. no canto direito navegue com os botões voltar e avançar para ler as avaliações
+
+## Entrar nas redes sociais da criptenor
+
+1. Entre na página principal/raiz
+2. role até o final
+3. Localize no rodaapé as redes sociais da criptenor

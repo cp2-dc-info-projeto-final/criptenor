@@ -1,25 +1,22 @@
 
-# CRIPTENOR DASHBOARD 
+# Projeto Criptenor
 
-### Guia de Acesso ao Projeto CRIPTENOR
-
-![LOGO DO PROJETO](documentacao/logo.png) <!-- Altere o caminho para o local da imagem -->
+Criptenor é uma empresa focada em coleta, análise e dispersão de dados, criada em 2024 com o objetivo de se tornar uma plataforma líder em análise de interações sociais.  
 
 ---
 
-### Como rodar o projeto:
+## Guia de Inicialização
+
+Para facilitar o processo de execução, o projeto conta com um script de automação. Siga os passos abaixo para iniciar o Criptenor.
+
+### Passo 1: Iniciar o Projeto
+
+No terminal, a partir da raiz do projeto, execute o seguinte comando:
 
 ```bash
-cd web
-npm run dev
+./iniciar_criptenor.sh
 ```
 
----
-
-### Como ativar o servidor do banco de dados:
-
-```bash
-node web/server/server.cjs
-```
-
+### Documentação do Software
+[Para acessar os casos de uso, clique aqui](documentacao/casos_de_uso.md).
 

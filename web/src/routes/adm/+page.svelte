@@ -126,6 +126,7 @@
         display: flex;
         justify-content: space-between;
     }
+    
 </style>
 <script>
     import Nav from "../componentes/Nav.svelte";

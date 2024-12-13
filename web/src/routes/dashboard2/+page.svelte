@@ -4,7 +4,7 @@
     import UserAudit from "../componentes/user_audit/UserAudit.svelte";
 
     let totalCredito = 0; // Inicialize a variável
-    let custo_analise_simples=20
+    const custoAnaliseSimples = 20;
 
     // Função para buscar o total de créditos do usuário
     async function buscarTotalCredito() {
@@ -20,8 +20,8 @@
 
             if (response.ok) {
                 const data = await response.json();
-                console.log('Total de crédito disponível:', data.totalCredito);
-                totalCredito = data.totalCredito; // Atualiza o total de crédito
+                console.log('Total de crédito disponível:', data.totalSaldo);
+                totalCredito = data.totalSaldo; // Atualiza o total de crédito
             } else {
                 console.error('Erro ao buscar total de crédito ou token inválido.');
                 totalCredito = 0; // Define como 0 em caso de erro
@@ -32,12 +32,45 @@
         }
     }
 
+    // Função para realizar o débito no servidor
+    async function realizarDebito(valor: number) {
+        const access_token = localStorage.getItem('access_token');
+        try {
+            const response = await fetch('http://localhost:3000/realizar_debito', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ access_token, valor }),
+            });
+
+            if (response.ok) {
+                console.log('Débito realizado com sucesso.');
+                totalCredito -= valor; // Atualiza o total de crédito localmente
+                return true;
+            } else {
+                const errorText = await response.text();
+                console.error('Erro ao realizar débito:', errorText);
+                return false;
+            }
+        } catch (error) {
+            console.error('Erro ao realizar débito:', error);
+            return false;
+        }
+    }
+
     // Verificar créditos ao clicar no cadeado
-    function verificarCredito(e: Event, index: number) {
+    async function verificarCredito(e: Event, index: number) {
+        buscarTotalCredito();
         e.preventDefault();
-        if (totalCredito >= 20) {
-            const div = document.querySelectorAll('.info_i')[index];
-            div?.classList.add('aberta'); // Adiciona uma classe para indicar que está aberta
+        if (totalCredito >= custoAnaliseSimples) {
+            const sucesso = await realizarDebito(custoAnaliseSimples);
+            if (sucesso) {
+                const div = document.querySelectorAll('.info_i')[index];
+                div?.classList.add('aberta'); // Adiciona uma classe para indicar que está aberta
+            } else {
+                alert('Erro ao processar débito. Tente novamente.');
+            }
         } else {
             alert('Você precisa de pelo menos 20 créditos para acessar esta informação.');
         }
