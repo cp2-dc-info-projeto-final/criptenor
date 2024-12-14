@@ -28,6 +28,7 @@ body {
     border-radius: 18px;
     display: flex;
     flex-direction: row; /* Para organizar os filhos horizontalmente */
+    align-items: center;
 }
 
 .informacoes_iniciais {
@@ -41,6 +42,8 @@ body {
     padding: 10px;
     overflow-y: auto; /* Permite rolagem vertical */
     box-sizing: border-box; /* Inclui padding na altura */
+    margin-right: 1%;
+    
 }
 
 .informacoes_iniciais .info_i {

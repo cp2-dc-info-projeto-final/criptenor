@@ -391,11 +391,15 @@ app.post('/cadastro_usuario', async (req, res) => {
         senha: hashedPassword, // Armazenando a senha criptografada
         email_confirmado:false
       }]);
+      
 
-    if (error) {
-      console.error(error); // Logar o erro para depuração
-      return res.status(500).json({ error: 'Erro ao cadastrar o usuário' });
-    }
+      const { data1, error1 } = await supabase
+      .from('usuario')
+      .insert([{ 
+        
+        arroba: arroba, 
+        
+      }]);
 
     // Responder com sucesso em vez de redirecionar
     res.status(200).json({ message: 'Usuário cadastrado com sucesso' });
@@ -1358,43 +1362,22 @@ app.post('/realizar_debito', async (req, res) => {
     // 1. Buscar o usuário pelo access_token
     const { data: user, error: userError } = await supabase
       .from('usuario_apk')
-      .select('id, saldo') // Supondo que o saldo do usuário esteja na tabela
+      .select('id') // Supondo que o saldo do usuário esteja na tabela
       .eq('access_token', access_token)
       .single();
 
-    if (userError || !user) {
-      return res.status(404).send('Usuário não encontrado');
-    }
 
     const userId = user.id;
-    const saldoDisponivel = user.saldo;
+    
 
-    // 2. Verificar se há saldo suficiente para o débito
-    if (saldoDisponivel < valor) {
-      return res.status(400).send('Saldo insuficiente');
-    }
-
-    // 3. Atualizar o saldo do usuário
-    const novoSaldo = saldoDisponivel - valor;
-    const { error: saldoError } = await supabase
-      .from('usuario_apk')
-      .update({ saldo: novoSaldo })
-      .eq('id', userId);
-
-    if (saldoError) {
-      console.error('Erro ao atualizar saldo:', saldoError);
-      return res.status(500).send('Erro ao atualizar saldo do usuário');
-    }
+    
 
     // 4. Inserir o valor na tabela débito
     const { error: debitoError } = await supabase
       .from('debito')
       .insert([{ id_usuario: userId, total: valor }]);
 
-    if (debitoError) {
-      console.error('Erro ao inserir débito:', debitoError);
-      return res.status(500).send('Erro ao realizar débito');
-    }
+  
 
     // Resposta de sucesso
     res.status(200).send('Débito realizado com sucesso');

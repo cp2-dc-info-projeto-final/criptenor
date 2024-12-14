@@ -1,100 +1,222 @@
 <script>
-  import { onMount } from 'svelte';
-  import { goto } from '$app/navigation';
-  import UserAudit from './user_audit/UserAudit.svelte';
+import { onMount } from 'svelte';
+import { goto } from '$app/navigation';
+import { page } from '$app/stores';
 
-  let userId = null;
-  let totalCredito = 0; // Inicialize a variável
+import UserAudit from './user_audit/UserAudit.svelte';
 
-  async function buscarTotalCredito() {
-    const access_token = localStorage.getItem('access_token');
-    try {
-      const response = await fetch('http://localhost:3000/total_credito', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ access_token }),
-      });
+let userId = null;
+let totalCredito = 0;
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log(data.saldoTotal)
-        totalCredito=data.saldoTotal;
-        return data.saldoTotal;
-      } else {
-        console.error('Erro ao buscar total de crédito ou token inválido.');
-        return 0; // Retorna 0 caso falhe
-      }
-    } catch (error) {
-      console.error('Erro ao buscar total de crédito:', error);
-      return 0; // Retorna 0 caso ocorra erro
+async function buscarTotalCredito() {
+  const access_token = localStorage.getItem('access_token');
+  try {
+    const response = await fetch('http://localhost:3000/total_credito', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ access_token }),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      totalCredito = data.saldoTotal;
+      return data.saldoTotal;
+    }
+    return 0;
+  } catch (error) {
+    console.error('Erro ao buscar saldo total:', error);
+    return 0;
+  }
+}
+
+async function conferirCredencial() {
+  const token = localStorage.getItem("access_token");
+  try {
+    const response = await fetch('http://localhost:3000/conferir-credencial-adm', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ access_token: token }),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      return data.user_id;
+    }
+    return null;
+  } catch (error) {
+    console.error('Erro ao verificar credencial:', error);
+    return null;
+  }
+}
+
+onMount(async () => {
+  const token = localStorage.getItem('access_token');
+  if (token) {
+    const verifiedUserId = await conferirCredencial(token);
+    if (verifiedUserId) {
+      userId = verifiedUserId;
+      totalCredito = await buscarTotalCredito();
     }
   }
+});
 
-  async function conferirCredencial() {
-    let token;
-    token=localStorage.getItem("access_token")
-    console.log(token);
-    try {
-      const response = await fetch('http://localhost:3000/conferir-credencial-adm', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ access_token: token }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        return data.user_id;
-      } else {
-        console.error('Token inválido ou erro na verificação.');
-        return null;
-      }
-    } catch (error) {
-      console.error('Erro ao verificar credencial:', error);
-      return null;
-    }
-  }
-
-  onMount(async () => {
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      try {
-        const verifiedUserId = await conferirCredencial(token);
-        if (verifiedUserId) {
-          userId = verifiedUserId;
-          console.log('Usuário autenticado com ID:', verifiedUserId);
-
-          // Atualize o total de crédito
-          totalCredito = await buscarTotalCredito();
-        } else {
-          console.log('Token inválido. Redirecionando para login.');
-          
-        }
-      } catch (error) {
-        console.error('Erro ao processar o token do usuário:', error);
-        
-      }
-    } else {
-      console.log('Nenhum token encontrado. Redirecionando para login.');
-      
-    }
-  });
-
-  function logout() {
-    localStorage.removeItem('access_token');
-    userId = null;
-    totalCredito = 0;
-    goto('/login');
-  }
+function logout() {
+  localStorage.removeItem('access_token');
+  userId = null;
+  totalCredito = 0;
+  goto('/login');
+}
 
   
 
   
 </script>
 
+
+
+<header>
+  <nav id="navbar">
+    <a href="/">
+      <div class="logo">
+        <img src="criptenor.png" width="30" height="30" alt="Logo Criptenor">
+        <span id="nav_logo">CRIPTENOR</span>
+      </div>
+    </a>
+
+    <ul id="nav_list">
+      <li class="nav-item active">
+        <a href="/#home">Início</a>
+      </li>
+      <li class="nav-item">
+        <a href="/#menu">Serviços</a>
+      </li>
+      <li class="nav-item">
+        <a href="/#testimonials">Avaliações</a>
+      </li>
+
+      {#if userId === 1}
+        <li class="nav-item">
+          <a href="/adm">Administração</a>
+        </li>
+      {/if}
+      <li class="nav-item">
+        <a href="/dashboard2">Dashboard</a>
+      </li>
+    </ul>
+
+    <!-- Botão Entrar/Sair -->
+    {#if userId}
+    <div class="user-nav">
+      <div class="info-user-nav">
+
+        
+        <label class="popup">
+          <input type="checkbox">
+          <div class="burger" tabindex="0">
+            <img src="https://vkjrrppgjzgtastjzgyg.supabase.co/storage/v1/object/public/app/profile%20(3).png?t=2024-12-09T04%3A31%3A37.215Z" alt="">
+          </div>
+          <nav class="popup-window">
+            <legend>Actions</legend>
+            <ul>
+              <li>
+                <a href="/perfil">
+                  <button>
+                    <svg stroke-linejoin="round" stroke-linecap="round" stroke-width="2" stroke="currentColor" fill="none" viewBox="0 0 24 24" height="14" width="14" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                      <circle r="4" cy="7" cx="9"></circle>
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    <span>Perfil</span>
+                  </button>
+                </a>
+                
+              </li>
+              <li>
+                <a href="/dashboard2">
+                  <button>
+                    <svg stroke-linejoin="round" stroke-linecap="round" stroke-width="2" stroke="currentColor" fill="none" viewBox="0 0 24 24" height="14" width="14" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                    </svg>
+                    <span>Dashboard</span>
+                  </button>
+                </a>
+              </li>
+              
+              
+                {#if $page.url.pathname != '/dashboard2'}
+                <a href="/dashbord2">
+                  <li>
+                    <button>
+                      <div class="img-tenorcoin">
+                        <img src="icon/moedas.png" alt="">
+                      </div>
+                      {totalCredito}
+                    </button>
+                  </li>
+                </a>
+                 
+                  
+                {/if}
+
+              
+             
+              
+              
+            </ul>
+          </nav>
+        </label>
+     
+
+    </div>
+    <img on:click={logout} src="sair.png" alt="" class="sair">
+
+    </div>
+    
+
+  
+    {:else}
+      <a class="button_analise" href="/login">
+        <button class="btn-default">
+          Entrar
+        </button>
+      </a>
+    {/if}
+
+    <button id="mobile_btn">
+      <i class="fa-solid fa-bars"></i>
+    </button>
+  </nav>
+
+  <div id="mobile_menu">
+    <ul id="mobile_nav_list">
+      <li class="nav-item">
+        <a href="#home">Início</a>
+      </li>
+      <li class="nav-item">
+        <a href="#menu">Cardápio</a>
+      </li>
+      <li class="nav-item">
+        <a href="#testimonials">Avaliações</a>
+      </li>
+
+      {#if userId}
+        <li class="nav-item">
+          <button class="btn btn-link" on:click={logout}>Sair</button>
+        </li>
+      {:else}
+        <li class="nav-item">
+          <a href="/login">Entrar</a>
+        </li>
+      {/if}
+    </ul>
+
+    <button class="btn-default">
+      Peça aqui
+    </button>
+  </div>
+</header>
 
 <style>
   header {
@@ -104,6 +226,12 @@
     top: 0;
     background-color: var(--color-primary-1);
     z-index: 3;
+  }
+  .sair{
+    margin-left: 10px;
+    width: 35px;
+    height: 35px;
+    cursor: pointer;
   }
 
   #navbar {
@@ -150,7 +278,10 @@
   .img-tenorcoin img{
     width: 100%;
   }
-
+  .user-nav{
+    display: flex;
+    width: 100px;
+  }
   .btn-default {
     border: none;
     cursor: pointer;
@@ -431,140 +562,3 @@
   width: 35px;
 }
 </style>
-
-<header>
-  <nav id="navbar">
-    <a href="/">
-      <div class="logo">
-        <img src="criptenor.png" width="30" height="30" alt="Logo Criptenor">
-        <span id="nav_logo">CRIPTENOR</span>
-      </div>
-    </a>
-
-    <ul id="nav_list">
-      <li class="nav-item active">
-        <a href="/#home">Início</a>
-      </li>
-      <li class="nav-item">
-        <a href="/#menu">Serviços</a>
-      </li>
-      <li class="nav-item">
-        <a href="/#testimonials">Avaliações</a>
-      </li>
-
-      {#if userId === 1}
-        <li class="nav-item">
-          <a href="/adm">Administração</a>
-        </li>
-      {/if}
-      <li class="nav-item">
-        <a href="/dashboard2">Dashboard</a>
-      </li>
-    </ul>
-
-    <!-- Botão Entrar/Sair -->
-    {#if userId}
-    <div class="info-user-nav">
-
-        
-        <label class="popup">
-          <input type="checkbox">
-          <div class="burger" tabindex="0">
-            <img src="https://vkjrrppgjzgtastjzgyg.supabase.co/storage/v1/object/public/app/profile%20(3).png?t=2024-12-09T04%3A31%3A37.215Z" alt="">
-          </div>
-          <nav class="popup-window">
-            <legend>Actions</legend>
-            <ul>
-              <li>
-                <a href="/perfil">
-                  <button>
-                    <svg stroke-linejoin="round" stroke-linecap="round" stroke-width="2" stroke="currentColor" fill="none" viewBox="0 0 24 24" height="14" width="14" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                      <circle r="4" cy="7" cx="9"></circle>
-                      <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                      <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                    </svg>
-                    <span>Perfil</span>
-                  </button>
-                </a>
-                
-              </li>
-              <li>
-                <a href="/dashboard2">
-                  <button>
-                    <svg stroke-linejoin="round" stroke-linecap="round" stroke-width="2" stroke="currentColor" fill="none" viewBox="0 0 24 24" height="14" width="14" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-                      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-                    </svg>
-                    <span>Dashboard</span>
-                  </button>
-                </a>
-              </li>
-              <hr>
-              <li>
-                <button>
-                  <div class="img-tenorcoin">
-                    <img src="icon/moedas.png" alt="">
-                  </div>
-                  {totalCredito}
-                </button>
-              </li>
-             
-              <hr>
-              <li>
-                <button on:click={logout}>
-                  <svg stroke-linejoin="round" stroke-linecap="round" stroke-width="2" stroke="currentColor" fill="none" viewBox="0 0 24 24" height="14" width="14" xmlns="http://www.w3.org/2000/svg">
-                    <line y2="18" x2="6" y1="6" x1="18"></line>
-                    <line y2="18" x2="18" y1="6" x1="6"></line>
-                  </svg>
-                  <span>Sair</span>
-                </button>
-              </li>
-            </ul>
-          </nav>
-        </label>
-     
-
-    </div>
-  
-    {:else}
-      <a class="button_analise" href="/login">
-        <button class="btn-default">
-          Entrar
-        </button>
-      </a>
-    {/if}
-
-    <button id="mobile_btn">
-      <i class="fa-solid fa-bars"></i>
-    </button>
-  </nav>
-
-  <div id="mobile_menu">
-    <ul id="mobile_nav_list">
-      <li class="nav-item">
-        <a href="#home">Início</a>
-      </li>
-      <li class="nav-item">
-        <a href="#menu">Cardápio</a>
-      </li>
-      <li class="nav-item">
-        <a href="#testimonials">Avaliações</a>
-      </li>
-
-      {#if userId}
-        <li class="nav-item">
-          <button class="btn btn-link" on:click={logout}>Sair</button>
-        </li>
-      {:else}
-        <li class="nav-item">
-          <a href="/login">Entrar</a>
-        </li>
-      {/if}
-    </ul>
-
-    <button class="btn-default">
-      Peça aqui
-    </button>
-  </div>
-</header>
