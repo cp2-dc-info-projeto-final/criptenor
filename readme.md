@@ -18,5 +18,5 @@ No terminal, a partir da raiz do projeto, execute o seguinte comando:
 ```
 
 ### Documentação do Software
-[Para acessar os casos de uso, clique aqui](documentacao/casos_de_uso.md).
+[Para acessar os casos de uso, clique aqui](documentacao/casos_de_uso_usuario.md).
 
