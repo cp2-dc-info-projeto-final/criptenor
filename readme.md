@@ -1,5 +1,6 @@
 
-# Projeto Criptenor
+# Projeto Criptenor Dashboard
+![Banner Casos de uso](documentacao/logo.png)
 
 Criptenor é uma empresa focada em coleta, análise e dispersão de dados, criada em 2024 com o objetivo de se tornar uma plataforma líder em análise de interações sociais.  
 

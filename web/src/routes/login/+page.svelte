@@ -192,7 +192,7 @@
         localStorage.setItem('access_token', data.access_token);
 
         // Redirecionar para a página inicial
-        window.location.href = '/dashboard';
+        window.location.href = '/dashboard2';
       } else {
         // Exibe o erro recebido
         alert(data.error || 'Erro ao fazer login');
