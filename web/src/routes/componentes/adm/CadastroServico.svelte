@@ -6,7 +6,7 @@
     let mensagem = "";
     let sucesso = false;
     let imagem = null; // Variável para armazenar a imagem
-    let previewUrl = ''; // URL da imagem carregada para o preview
+    let previewUrl = 'https://vkjrrppgjzgtastjzgyg.supabase.co/storage/v1/object/public/app/upload%20(1).png?t=2024-12-18T17%3A47%3A04.202Z'; // URL da imagem carregada para o preview
 
     // Função para enviar dados ao backend
     async function cadastrarServico(event) {
@@ -58,7 +58,7 @@
         avaliacao = "";
         valor = "";
         imagem = null;
-        previewUrl = ''; // Limpa a URL do preview
+        previewUrl = 'https://vkjrrppgjzgtastjzgyg.supabase.co/storage/v1/object/public/app/upload%20(1).png?t=2024-12-18T17%3A47%3A04.202Z'; // Limpa a URL do preview
     }
 
     // Função para lidar com o upload da imagem
@@ -90,7 +90,7 @@
         width: 400px;
         padding: 20px;
         border-radius: 0.75rem;
-        background-color: rgba(17, 24, 39, 1);
+        
         color: rgba(243, 244, 246, 1);
     }
 
@@ -108,6 +108,8 @@
         flex-direction: column;
         align-items: flex-start;
         width: 100%;
+        justify-content: center;
+        align-items: center;
     }
 
     .input-group label {

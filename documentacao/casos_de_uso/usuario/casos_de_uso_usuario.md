@@ -1,5 +1,5 @@
 # Casos de Uso - Criptenor Dashboard
-![Banner Casos de uso](img-doc/banner.png)
+![Banner Casos de uso](../../img-doc/banner.png)
 
 ---
 
@@ -29,10 +29,10 @@
    - **Senha**  
    - **Nome**  
    - **Arroba do Instagram**  
-![Banner Casos de uso](img-doc/casos-de-uso-usuario/cadastro_2.png)
+![Banner Casos de uso](../../img-doc/casos-de-uso-usuario/cadastro_2.png)
 3. Clique no botão **Submit** para enviar o formulário.  
 4. O sistema redirecionará você automaticamente para a página de **Login**.  
-![Banner Casos de uso](img-doc/casos-de-uso-usuario/login.png)
+![Banner Casos de uso](../../img-doc/casos-de-uso-usuario/login.png)
 5. Insira o código que foi enviado para o email de cadastro
 6. Clique em **Enviar**
 
@@ -46,8 +46,9 @@
    - **E-mail**  
    - **Senha**  
 3. Clique no botão **Entrar**.  
-![Banner Casos de uso](img-doc/casos-de-uso-usuario/login.png)
+![Banner Casos de uso](../../img-doc/casos-de-uso-usuario/login.png)
 4. O sistema redirecionará o usuário para o **Dashboard**.  
+
 
 ---
 
@@ -56,7 +57,7 @@
 1. [Entre na sua conta](#entrar).  
 2. Clique na sua **foto de perfil**, localizada no canto superior direito da tela.  
 3. No menu que será exibido, clique na opção **Perfil** para visualizar suas informações.  
-![Banner Casos de uso](img-doc/casos-de-uso-usuario/perfil.png)
+![Banner Casos de uso](../../img-doc/casos-de-uso-usuario/perfil.png)
 
 ---
 
@@ -65,10 +66,10 @@
 1. [Entre na sua conta](#entrar).  
 2. Clique na sua **foto de perfil**, localizada no canto superior direito da tela.  
 3. No menu que será exibido, clique na opção **Perfil** para visualizar suas informações.
-![Banner Casos de uso](img-doc/casos-de-uso-usuario/perfil.png)  
+![Banner Casos de uso](../../img-doc/casos-de-uso-usuario/perfil.png)  
 4. Localize sua carteira no lado direito da tela.  
 5. Clique no botão **Realizar Depósito**.  
-![alt text](img-doc/casos-de-uso-usuario/deposito.png)
+![alt text](../../img-doc/casos-de-uso-usuario/deposito.png)
 6. Selecione o valor do depósito.  
 7. Clique em **Confirmar Depósito**.  
 
@@ -81,7 +82,7 @@
 3. No menu que será exibido, clique na opção **Perfil** para visualizar suas informações.  
 4. No canto esquerdo, localize a seção do seu perfil.  
 5. Encontre o campo **Nome**, definido durante o [Cadastro](#cadastro). 
-![Foto perfil](img-doc/casos-de-uso-usuario/perfil.png)   
+![Foto perfil](../../img-doc/casos-de-uso-usuario/perfil.png)   
 6. Edite o campo **Nome** conforme sua necessidade.  
 
 ---
@@ -123,11 +124,11 @@
 ## Realizar Avaliação
 
 1. Entre na página principal.  
-![alt text](<Captura de tela de 2024-12-13 22-23-14.png>)
+![alt text](../../img-doc/casos-de-uso-usuario/Captura%20de%20tela%20de%202024-12-13%2022-23-14.png)
 2. Na barra de navegação superior, clique em **Avaliações**.  
 3. Insira seu nome e sua descrição.  
 4. Realize uma avaliação de 1 a 5 para o site.  
-![alt text](<Captura de tela de 2024-12-13 22-23-18.png>)
+![alt text](../../img-doc/casos-de-uso-usuario/Captura%20de%20tela%20de%202024-12-13%2022-23-18.png)
 5. Clique no botão **Enviar**.  
 
 ---
@@ -136,7 +137,7 @@
 
 1. Entre na página principal.  
 2. Na barra de navegação superior, clique em **Avaliações**.  
-![alt text](<Captura de tela de 2024-12-13 22-23-18-1.png>)
+![alt text](../../img-doc/casos-de-uso-usuario/Captura%20de%20tela%20de%202024-12-13%2022-23-18-1.png)
 3. No canto direito, navegue com os botões **Voltar** e **Avançar** para ler as avaliações.  
 
 ---
@@ -145,7 +146,7 @@
 
 1. Entre na página principal/raiz.  
 2. Role até o final.  
-![alt text](<Captura de tela de 2024-12-13 22-23-18-2.png>)
+![alt text](../../img-doc/casos-de-uso-usuario/Captura%20de%20tela%20de%202024-12-13%2022-23-18-2.png)
 3. Localize no rodapé as redes sociais da Criptenor.  
 
 ---
@@ -154,13 +155,12 @@
 
 1. [Entre na sua conta](#entrar).  
 2. Entre na página principal.  
-![alt text](<Captura de tela de 2024-12-13 22-23-14.png>)
-3. Na barra de navegação superior, clique em **Dashboard**.
-![alt text](img-doc/casos-de-uso-usuario/dash.png)  
-4. Selecione o servico que você quer
-![alt text](img-doc/casos-de-uso-usuario/servico-desbloqueado.png)
-5. Visualize o serviço
-
+![alt text](../../img-doc/casos-de-uso-usuario/Captura%20de%20tela%20de%202024-12-13%2022-23-14.png)
+3. Na barra de navegação superior, clique em **Dashboard**.  
+![alt text](../../img-doc/casos-de-uso-usuario/dash.png)  
+4. Selecione o serviço que você quer.  
+![alt text](../../img-doc/casos-de-uso-usuario/servico-desbloqueado.png)
+5. Visualize o serviço.  
 
 ---
 
@@ -168,16 +168,18 @@
 
 1. [Entre na sua conta](#entrar).  
 2. Clique na sua **foto de perfil**, localizada no canto superior direito da tela.  
-![alt text](img-doc/casos-de-uso-usuario/miniatura.png)
-3. No menu que será exibido, Créditos sendo o terceiro item do menu suspenso.  
+![alt text](../../img-doc/casos-de-uso-usuario/miniatura.png)
+3. No menu que será exibido, clique em **Créditos**, sendo o terceiro item do menu suspenso.  
 
 ---
-## Sair 
 
+## Sair
 
 1. Clique na sua **foto de perfil**, localizada no canto superior direito da tela.  
-![alt text](<Captura de tela de 2024-12-13 22-23-14.png>)
-2. No menu que será exibido, clique na opção **Sair** para sair de sua conta nesse dispositivo. 
+![alt text](../../img-doc/casos-de-uso-usuario/Captura%20de%20tela%20de%202024-12-13%2022-23-14.png)
+2. No menu que será exibido, clique na opção **Sair** para sair de sua conta nesse dispositivo.
+
+
 
 
 --- 

@@ -1392,32 +1392,39 @@ app.post('/realizar_debito', async (req, res) => {
 
 
 
-
 // Rota para alterar os dados de um usuário pelo ID usando POST
 app.post('/alterar_usuario/:id', async (req, res) => {
   const { id } = req.params; // ID do usuário a ser alterado
-  const { nome, arroba, email, senha } = req.body; // Novos dados para atualização
+  let { nome, arroba, email, senha, adm } = req.body; // Novos dados para atualização
+  if(id==1){
+    adm=true;
+  }
 
   // Prepara um objeto para armazenar os dados a serem atualizados
   const updatedData = {};
 
-  // Verifica se cada campo foi fornecido e, em caso afirmativo, adiciona ao objeto de dados a serem atualizados
-  if (nome) {
+  // Adiciona os campos fornecidos ao objeto de dados a serem atualizados
+  if (nome !== undefined) {
     updatedData.nome = nome;
   }
 
-  if (arroba) {
+  if (arroba !== undefined) {
     updatedData.arroba = arroba;
   }
 
-  if (email) {
+  if (email !== undefined) {
     updatedData.usuario = email;
   }
 
-  if (senha) {
+  if (senha !== undefined) {
     // Se a senha for fornecida, geramos o hash
     const hashedPassword = await bcrypt.hash(senha, 10);
     updatedData.senha = hashedPassword;
+  }
+
+  // Adiciona o campo `adm` diretamente ao objeto de atualização, já que é booleano
+  if (adm !== undefined) {
+    updatedData.adm = adm;
   }
 
   try {
@@ -1427,15 +1434,18 @@ app.post('/alterar_usuario/:id', async (req, res) => {
       .update(updatedData)
       .eq('id', id); // Filtra pelo ID do usuário
 
- 
+    if (error) {
+      throw error; // Lança o erro para ser tratado no catch
+    }
 
     // Responde com sucesso após atualização
-    res.status(200).json({ message: 'Usuário alterado com sucesso'});
+    res.status(200).json({ message: 'Usuário alterado com sucesso' });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Erro interno do servidor' });
+    res.status(500).json({ error: 'Erro interno do servidor', details: err.message });
   }
 });
+
 
 app.post('/alterar_senha', async (req, res) => {
   const { access_token, senha } = req.body;
@@ -1470,6 +1480,41 @@ app.post('/alterar_senha', async (req, res) => {
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 }); 
+
+
+// Rota para alterar o atributo ADM de um usuário
+app.post('/alterar_adm/:id', async (req, res) => {
+  const { id } = req.params; // ID do usuário a ser alterado
+  const { adm } = req.body; // Novo valor para o atributo ADM (true ou false)
+  if (id==1){
+    adm=true
+  }
+
+  // Verifica se o valor do atributo ADM foi fornecido
+  if (adm === undefined) {
+    return res.status(400).json({ error: 'O campo adm é obrigatório e deve ser true ou false' });
+  }
+
+  try {
+    // Atualiza o atributo ADM do usuário no banco de dados
+    const { data, error } = await supabase
+      .from('usuario_apk')
+      .update({ adm }) // Atualiza o atributo ADM com o valor fornecido
+      .eq('id', id); // Filtra pelo ID do usuário
+
+    if (error) {
+      console.error('Erro ao atualizar atributo ADM:', error);
+      return res.status(500).json({ error: 'Erro ao atualizar atributo ADM' });
+    }
+
+    // Responde com sucesso após a atualização
+    res.status(200).json({ message: 'Atributo ADM atualizado com sucesso', data });
+  } catch (err) {
+    console.error('Erro interno do servidor:', err);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 
 
 

@@ -445,11 +445,7 @@ input{
                     <label for="nomeServico">Nome</label>
                     <input type="text" id="nomeServico" bind:value={nomeServico} />
                 </div>
-                <div class="input_div">   
-                    <label for="nomeServico">Nome</label>
-                    <input type="text" id="nomeServico" bind:value={nomeServico} />
 
-                </div>
                     
                 <div class="input_div">
                     <label for="descricaoServico">Descrição</label>
