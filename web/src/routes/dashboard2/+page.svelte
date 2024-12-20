@@ -2,8 +2,10 @@
     import { onMount } from 'svelte';
     import Nav from "../componentes/Nav.svelte";
     import UserAudit from "../componentes/user_audit/UserAudit.svelte";
+    import Extrato from '../componentes/Extrato.svelte';
 
     let totalCredito = 0;
+
     const custoAnaliseSimples = 20;
     let valor=0;
 
@@ -337,10 +339,11 @@ async function fetchServices() {
                 <p>Carregando...</p>
             {/if}
         
-        
+            <Extrato/>
         
         
     </div>
+    
     <div class="saldo-total">
         Saldo Total: {totalCredito} créditos
     </div>

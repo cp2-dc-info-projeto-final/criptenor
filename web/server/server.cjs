@@ -1305,6 +1305,75 @@ app.post('/total_credito', async (req, res) => {
   }
 });
 
+app.post('/extrato', async (req, res) => {
+  const { access_token } = req.body;
+
+  if (!access_token) {
+    return res.status(400).send('Access token é obrigatório');
+  }
+
+  try {
+    // 1. Buscar o usuário pelo access_token
+    const { data: user, error: userError } = await supabase
+      .from('usuario_apk')
+      .select('id')
+      .eq('access_token', access_token)
+      .single();
+
+    if (userError || !user) {
+      return res.status(404).send('Usuário não encontrado');
+    }
+
+    const userId = user.id;
+
+    // 2. Buscar créditos do usuário
+    const { data: creditos, error: creditosError } = await supabase
+      .from('credito')
+      .select('id, total, created_at')
+      .eq('id_usuario', userId);
+
+    if (creditosError) {
+      return res.status(500).send('Erro ao buscar créditos');
+    }
+
+    // 3. Buscar débitos do usuário
+    const { data: debitos, error: debitosError } = await supabase
+      .from('debito')
+      .select('id, total, created_at')
+      .eq('id_usuario', userId);
+
+    if (debitosError) {
+      return res.status(500).send('Erro ao buscar débitos');
+    }
+
+    // 4. Combinar e ordenar as transações
+    const transacoes = [
+      ...creditos.map(credito => ({
+        id: credito.id,
+        tipo: 'credito',
+        valor: credito.total,
+        created_at: credito.created_at,
+      })),
+      ...debitos.map(debito => ({
+        id: debito.id,
+        tipo: 'debito',
+        valor: debito.total,
+        created_at: debito.created_at,
+      })),
+    ];
+
+    // Ordenar por created_at em ordem decrescente
+    transacoes.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+    res.status(200).json({ transacoes });
+  } catch (err) {
+    console.error('Erro ao gerar extrato:', err);
+    res.status(500).send('Erro ao processar a solicitação');
+  }
+});
+
+
+
 
 app.post('/realizar_deposito', async (req, res) => {
   const { access_token, valor } = req.body;
