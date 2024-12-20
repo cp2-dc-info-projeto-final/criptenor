@@ -40,6 +40,7 @@ async function conferirCredencial() {
 
     if (response.ok) {
       const data = await response.json();
+      const foto_perfil = data.path_foto;
       return data.user_id;
     }
     return null;
@@ -87,9 +88,7 @@ function logout() {
       <li class="nav-item active">
         <a href="/#home">Início</a>
       </li>
-      <li class="nav-item">
-        <a href="/#menu">Serviços</a>
-      </li>
+      
       <li class="nav-item">
         <a href="/#testimonials">Avaliações</a>
       </li>

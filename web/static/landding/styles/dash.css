@@ -29,6 +29,7 @@ body {
     display: flex;
     flex-direction: row; /* Para organizar os filhos horizontalmente */
     align-items: center;
+    justify-content: space-between;
 }
 
 .informacoes_iniciais {

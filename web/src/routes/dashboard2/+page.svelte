@@ -5,8 +5,9 @@
 
     let totalCredito = 0;
     const custoAnaliseSimples = 20;
+    let valor=0;
 
-    let informacoesDesbloqueadas = [false, false, false, false, false];
+    let informacoesDesbloqueadas = [false, false, false, false, false, false, false, false, false];
 
     async function buscarTotalCredito() {
         const access_token = localStorage.getItem('access_token');
@@ -30,6 +31,25 @@
             totalCredito = 0;
         }
     }
+
+    let services = [];
+
+async function fetchServices() {
+    try {
+        const response = await fetch('http://localhost:3000/servicos');  // Substitua pelo seu endpoint real
+        if (!response.ok) {
+            throw new Error('Erro ao buscar serviços');
+        }
+        services = await response.json();  // Recebe a lista de serviços do banco
+
+        // Cria uma lista de "false" com o mesmo tamanho da lista de serviços
+        let informacoesDesbloqueadas = new Array(services.length).fill(false);
+        
+        console.log(informacoesDesbloqueadas);  // Exibe a lista de false correspondente ao número de serviços
+    } catch (error) {
+        console.error(error);
+    }
+}
 
     async function realizarDebito(valor) {
         const access_token = localStorage.getItem('access_token');
@@ -64,13 +84,14 @@
         }
     }
 
-    async function verificarCredito(e, index) {
+    async function verificarCredito(e, index, valor) {
+        
         e.preventDefault();
 
         await buscarTotalCredito();
 
-        if (totalCredito >= custoAnaliseSimples) {
-            const sucesso = await realizarDebito(custoAnaliseSimples);
+        if (totalCredito >= valor) {
+            const sucesso = await realizarDebito(valor);
 
             if (sucesso) {
                 informacoesDesbloqueadas = informacoesDesbloqueadas.map((status, i) =>
@@ -85,7 +106,7 @@
                 alert('Erro ao processar o débito. Tente novamente.');
             }
         } else {
-            alert('Créditos insuficientes. Mínimo de 20 créditos.');
+            alert('Você não tem creditos suficientes');
         }
     }
 
@@ -102,6 +123,7 @@
     onMount(async () => {
         await buscarTotalCredito();
         atualizarCardSaldo();
+        fetchServices();
 
         // Importa a biblioteca confetti manualmente para estar disponível no `window`
         const script = document.createElement('script');
@@ -117,6 +139,7 @@
 
     
     import { goto } from '$app/navigation'; // Importa o goto para redirecionamento
+    import { each } from 'chart.js/helpers';
 
     interface Perfil {
         id: number;
@@ -216,30 +239,53 @@
 <body>
     <div class="dashboard">
         <div class="informacoes_iniciais">
-            {#if perfil}
-                {#each [perfil.num_seguidores, perfil.num_curtidas, perfil.num_comentarios] as info, i}
-                    <div class="info_i {informacoesDesbloqueadas[i] ? 'aberta' : ''}">
-                        <div class="mascara">
-                            <button class="cadeado" on:click={(e) => verificarCredito(e, i)}>
-                                🔒
-                            </button>
-                        </div>
-                        <div class="conteudo">{info}</div>
+            {#each services as service, i}
+                <div class="info_i {informacoesDesbloqueadas[i
+
+                    
+                ] ? 'aberta' : ''}">
+                    <div class="mascara">
+                        <button class="cadeado" on:click={(e) => verificarCredito(e, i, service.valor)}>
+                            <div class="conteudo_trancado">
+                                
+                                <p>
+                                    {service.nome}
+
+                                </p>
+                                <p>
+                                    {service.valor}
+
+                                </p>
+                                
+
+                            </div>
+                        
+                            🔒
+                        </button>
                     </div>
-                {/each}
-            {:else}
-                <p>Carregando informações...</p>
-            {/if}
+                    <div class="conteudo">{service.nome}
+                        <img src="{service.path_foto}" alt="">
+                    </div>
+                </div>
+            {/each}
+           
         </div>
         
             {#if perfil}
+            
             <div class="hierarquia_de_relacionamento info_i {informacoesDesbloqueadas[3] ? 'aberta' : ''}">
                 <!-- Hierarquia de Relacionamento fixa com valor 100 -->
                 
                     <div class="mascara">
-                        <button class="cadeado" on:click={(e) => verificarCredito(e, 3)}>
-                            🔒
-                        </button>
+                        <div class="analise_perfil">
+                            <p>1000 C</p>
+                            <button class="cadeado" on:click={(e) => verificarCredito(e, 3, 1000)}>
+                                🔒
+                            </button>
+
+                        </div>
+                        
+                        
                     </div>
                     <div class="hierarquia_conteudo">
                         <div class="list_titulo">
@@ -268,15 +314,15 @@
                                   <p>{pessoa.arroba}</p>
                                 </div>
                                 <div class="resposta_pontuacao">
-                                  <p>{pessoa.pontuacao}</p>
+                                    <p>{Math.round(pessoa.pontuacao)}</p> <!-- Arredonda para o mais próximo -->
                                 </div>
                               </div>
                             {/each}
                             
                             <!-- Botões de navegação -->
                             <div class="pagination">
-                              <button on:click={prevPage} disabled={currentPage === 0}>Anterior</button>
-                              <button on:click={nextPage} disabled={(currentPage + 1) * itemsPerPage >= perfil.relacionamento.length}>Próximo</button>
+                              <button class="button" on:click={prevPage} disabled={currentPage === 0}>Anterior</button>
+                              <button class="button" on:click={nextPage} disabled={(currentPage + 1) * itemsPerPage >= perfil.relacionamento.length}>Próximo</button>
                             </div>
                           {:else}
                             <p>Carregando...</p>
@@ -315,6 +361,10 @@
         justify-content: center;
         align-items: center;
     }
+    .list_titulo{
+        display: flex;
+        justify-content:space-between;
+    }
 
     .mascara {
         position: absolute;
@@ -339,17 +389,41 @@
 
     .info_i.aberta .conteudo {
         visibility: visible;
+    height: 90%;
+    flex-direction: column;
+    display: flex
+;
+    }
+    .button{
+        
+    display: block;
+    width: 100%;
+    background-color: rgba(167, 139, 250, 1);
+    padding: 0.75rem;
+    text-align: center;
+    color: rgba(17, 24, 39, 1);
+    border: none;
+    border-radius: 0.375rem;
+    font-weight: 600;
+    margin: 25px 0px;
+  
     }
 
     .info_i.aberta .cadeado, .info_i.aberta .mascara  {
         visibility: hidden;
+    }
+    .dashbord{
+        justify-content: space-between;
     }
   
 
     .conteudo {
         visibility: hidden;
         transition: visibility 0.5s ease;
+        justify-content: space-between;
+
     }
+ 
     .saldo-total {
     position: fixed;
     top: 120px;
@@ -366,12 +440,31 @@
     font-family: Arial, sans-serif;
 }
 .hierarquia_de_relacionamento{
-    width: 300px;
+    width: 600px;
     height: 95%;
     border-radius: 16px;
     background-color: rgb(211, 211, 211);
 
 }
+.conteudo_trancado{
+    display: flex;
+    flex-direction: column;
+}
+.hierarquia_conteudo{
+    width: 100%;
+}
+.list_resposta{
+    display: flex;
+    width: 100%;
+    width: 100%;
+    justify-content: space-between;
+}
+.list_resposta div{
+    width: 20%;
+    
+}
 
-
+.hierarquia_conteudo{
+    height: 100%;
+}
 </style>

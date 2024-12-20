@@ -327,7 +327,7 @@ app.post('/conferir-credencial-adm', async (req, res) => {
   try {
     const { data: usuarios, error } = await supabase
       .from('usuario_apk')
-      .select('id, adm, email_confirmado')
+      .select('id, adm, email_confirmado, path_foto')
       .eq('access_token', access_token)
       
       .limit(1);
@@ -342,7 +342,8 @@ app.post('/conferir-credencial-adm', async (req, res) => {
       message: 'Access token válido e usuário é administrador.', 
       user_id: usuario.id,
       adm: usuario.adm,
-      email_confirmado:usuario.email_confirmado
+      email_confirmado:usuario.email_confirmado,
+      path_foto:usuario.path_foto
     });
   } catch (err) {
     console.error('Erro inesperado ao conferir credencial:', err);
