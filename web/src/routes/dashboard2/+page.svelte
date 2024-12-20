@@ -397,6 +397,9 @@ async function fetchServices() {
     display: flex
 ;
     }
+    .info_i.aberta .conteudo img{
+        width: 100%;
+    }
     .button{
         
     display: block;
